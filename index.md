@@ -8,14 +8,8 @@ filename: index.md
 
 This documentation describes TraceT, or Transient RApid-response using Coordinated Event Triggering. TraceT is a web application that listens for notices from upstream, early detection instruments and automates the triggering of downstream observations.
 
-**Contents:**
-
-1. [Overview](#overview)
-2. [Notices](#notices)
-3. [Triggers](#triggers)
-4. [Administration](#administration)
-5. [Deployment](#deployment)
-6. [Appendix](#appendix)
+1. Contents
+{:toc}
 
 ## Overview
 
