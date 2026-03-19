@@ -5,3 +5,6 @@ plugins:
 color_scheme: dark
 nav_enabled: false
 gh_edit_link: false
+
+kramdown:
+  toc_levels: 1..2
