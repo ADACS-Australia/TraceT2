@@ -1,12 +1,12 @@
 ---
-title: TraceT Documentation
+title: TRACE-T Documentation
 filename: index.md
 ---
 
 
-# TraceT Documentation
+# TRACE-T Documentation
 
-This documentation describes TraceT, or Transient RApid-response using Coordinated Event Triggering. TraceT is a web application that listens for notices from upstream, early detection instruments and automates the triggering of downstream observations.
+This documentation describes TRACE-T, or Transient RApid-response using Coordinated Event Triggering. TRACE-T is a web application that listens for notices from upstream, early detection instruments and automates the triggering of downstream observatories.
 
 1. Contents
 {:toc}
@@ -15,36 +15,36 @@ This documentation describes TraceT, or Transient RApid-response using Coordinat
 
 ### Chain of events
 
-Internally, TraceT handles triggers using the following chain of events:
+Internally, TRACE-T handles transient notices using the following chain of events:
 
-1. A new notice is received by TraceT.
-2. Each _active_ Trigger is offered the chance to react to the notice _in order of priority_.
-3. If a Trigger subscribes to the notice's associated topic **and** the trigger's set of conditions all `PASS` (possibly using [condition inheritance](#Condition-inheritance)), **then** the trigger will attempt to make an observation.
+1. A new notice is received by TRACE-T.
+2. Each _active_ ruleset, known as a [_trigger_](#triggers), is offered the chance to react to the notice _in order of priority_.
+3. If a trigger subscribes to the notice's associated topic **and** the trigger's set of conditions all `PASS` (possibly using [condition inheritance](#Condition-inheritance)), **then** the trigger will attempt to make an observation.
 
 There are a few complicating factors to be aware of:
 
-* If an TraceT observation is already underway, that observation can only be overridden by a Trigger having a higher priority.
-* If the same Trigger has itself already started an observation, that observation may be overridden if (based on new information) the observation coordinates have changed so much that a repointing threshold has been exceeded.
+* If an TRACE-T observation is already underway, that observation can only be overridden by a Trigger having a higher priority.
+* If the same Trigger has itself already started an observation, that observation may be overridden if (based on new information) the new source coordinates deviate more than the repointing threshold.
 
-It is also possible to manually _retrigger_ a specific event attached to a trigger, and special rules around condition evaluation kick in in this case.
+It is also possible to manually _retrigger_ a specific event attached to a trigger, and special rules around condition evaluation apply in this case. See [the discussion](#conditions) of condition evaluation for more details.
 
 ## Notices
 
-Notices are broadcast by Nasa's <abbr title="General Coordinates Network">GCN</abbr> and are sorted by <em>topics.</em> Each topic pertains to a particular upstream, early detection instrument.
+Notices are broadcast by Nasa's [General Coordinates Network](https://gcn.nasa.gov/) (GCN) and are sorted by <em>topics.</em>
 
-Each topic has a fixed payload format, of which TraceT is compatible with XML and JSON formats.
+Each topic pertains to a particular upstream, early detection instrument and will announce events using a fix payload format. TRACE-T is compatible with XML and JSON formats.
 
-TraceT has a background service that listens for the configured set of topics and records any new notices that are broadcast.
+TRACE-T has a background service that listens for the configured set of topics and records any new notices that are broadcast.
 
-> **Hint:** The status of the GCN Listen background service is reported at the top right of all pages (e.g. "Stream OK" ). This status depends on TraceT having recorded a "heartbeat" notice no older than at most 5 seconds.
+> **Hint:** The status of the GCN Listen background service is reported at the top right of all pages (e.g. "Stream OK" ). This status depends on TRACE-T having recorded a "heartbeat" notice no older than at most 5 seconds.
 
-In addition to their payload, notices have both a `created` and `received` time. The `created` time records the time reported by the Kafka message broker, whilst `received` is the time TraceT downloads and saves the notice. Ideally, the time delay between a notice being created and received should be on the order of seconds.
+In addition to their payload, notices have both a `created` and `received` time. The `created` time records the time reported by the Kafka message broker, whilst `received` is the time TRACE-T downloads and saves the notice. Ideally, the time delay between a notice being created and received should be on the order of seconds.
 
 ### Viewing notices
 
-Notices can viewed at `/notices`, and it is possible to further filter this list by topic, format and date range.
+Notices can be viewed at `/notices`, and it is possible to further filter this list by topic, format and date range.
 
-Individual notices can be viewed and this will display the full payload.
+Individual notices can be viewed and this will display the full data payload, being either XML or JSON.
 
 > **Hint:** When configuring a new trigger, open up several example notices to help understand the structure of the payload and aid in writing the necessary XPath or JSONPath queries.
 
@@ -52,15 +52,15 @@ Individual notices can be viewed and this will display the full payload.
 
 Triggers combine three things:
 
-* The subscribe to a subset of available topics
-* They list a set of conditions about the event
-* They specify observing parameters
+* They subscribe to a subset of available topics
+* They list a set of user-configurable conditions about the event that must be satisfied
+* They specify observing parameters for the downstream observatory
 
 ### Viewing a trigger
 
 A full list of existing triggers is available at `/triggers`. This summary screen shows, at a glance, which triggers are active and inactive, as well as their respective priorities.
 
-> **Note:** In TraceT, lower numbers indicate a higher priority. For example, a trigger with priority `1` will be evaluated before one with a priroity of `5`.
+> **Note:** In TRACE-T, lower numbers indicate a higher priority. For example, a trigger with priority `1` will be evaluated before one with a priroity of `5`.
 
 For any trigger, you can click through to view a detailed overview of the trigger.
 
@@ -75,9 +75,9 @@ Consider an example of one of these events:
 ![image](index/event.png)
 
 * The ID displays the group ID that unifies this set of notices as pertaining to the same underlying event.
-* The uppermost date shows the time of the event
+* The uppermost date shows the time of the event (this value is calculated as the earliest time found at the time path among all notices in the )
 * The Notices table displays the notices associated with the event, in the order they were received
-* Current conditions shows how the _present_ conditions would be evaluated at the time the notice was received. This is a hypothetical evaluation that is used as part of testing a trigger—it lets us quickly identify whether our current configuration makes sense given the historic archive of notices. The current conditions will be updated every time the trigger configuration is changed. Hovering over each traffic light will identify each condition.
+* Current conditions shows how the _present_ trigger conditions would be evaluated at the time the notice was received. This is a hypothetical evaluation that is used as part of testing a trigger—it lets us quickly identify whether our current configuration makes sense given the historic archive of notices. The current conditions will be updated every time the trigger configuration is changed. Hovering over each traffic light will identify each condition.
 * The Decisions table shows historic decisions:
    * Each decision has a source which indicates what event led to an decision being made. This will typically be a new notice being received but may also be a due to manually retriggering the event.
    * The historic conditions displays which conditions were evaluated at the time of the decision and their outcomes. Hovering over each traffic light will provide further information about the condition.
@@ -97,7 +97,7 @@ First select each topic that you wish your trigger to subscribe to. You can sele
 There are number of constraints that must be observed when selecting multiple topics:
 
 * Each topic must be of the same format (XML or JSON).
-* Each topic must use the same Event ID, and this must be located at the same path within the notice payload.
+* Each topic must use the same Event ID, and this must be located at the same path within the notice payload (which is usually the case for notices originating from the same upstream instrument)
 * Similarly, the path to the event time must be shared amongst all notices.
 
 If you are subscribing to a set of notices from a single observatory, these contraints will normally be satisfied.
@@ -112,7 +112,7 @@ This field requires you to provide the XPath or JSONPath to the event ID element
 
 Notices contain a timestamp that references the underlying event and is separate to (and precedes) the notice creation time.
 
-TraceT will set the overall event timestamp as the earliest time (referenced by this given XPath or JSONPath element) amongst all event notices.
+TRACE-T will set the overall event timestamp as the earliest time (referenced by this given XPath or JSONPath element) amongst all event notices.
 
 #### Expiry
 
@@ -153,13 +153,13 @@ You may add as many conditions as are needed, as shown in the following example:
 
 #### Condition inheritance
 
-It is common for an astronomical event to trigger multiple notices, for example by being generated by different instruments on board a craft. As a result, any one notice typically contains only a subset of the total event description.
+It is common for an astronomical event to trigger multiple notices, for example by being generated by different instruments on board an orbiting observatory. As a result, any one notice typically contains only a subset of the total event description.
 
-To account for this, TraceT conditions work based on an inheritance model. Condition inheritance allows us to "accumulate" knowledge about an event, in chronological order, from multiple event notices.
+To account for this, TRACE-T conditions work based on an inheritance model. Condition inheritance allows us to "accumulate" knowledge about an event, in chronological order, from multiple event notices.
 
 An example might help:
 
-> **Example:** Swift generates multiple notices per event. One important condition checks for starlock failure. This information is usually in the first notice as a kind of initial system diagnostic, but it is not present in subsequent notices. TraceT will mark the condition as passed (or failed) from this first notice, but in subsequent notices it will simply inherit this status _unless the information is provided again in a subsequent notice._
+> **Example:** Swift generates multiple notices per event. One important condition checks for starlock failure. This information is usually in the first notice as a kind of initial system diagnostic, but it is not present in subsequent notices. TRACE-T will mark the condition as passed (or failed) from this first notice, but in subsequent notices it will simply inherit this status _unless the information is provided again in a subsequent notice._
 
 On each trigger's listing of events, you will observe the condition results being symbolised by the traffic light icon, but you may also observe some results being washed out. These washed out results indicate that the condition result has been inherited:
 
@@ -201,11 +201,11 @@ A user can be asigned groups from within their respective user edit form.
 
 ### GCN Topic management
 
-TraceT can subscribe (and unsubscribe) to GCN topics. Once subscribed to a topic, TraceT will begin listening and storing new notices on that topic.
+TRACE-T can subscribe (and unsubscribe) to GCN topics. Once subscribed to a topic, TRACE-T will begin listening and storing new notices on that topic.
 
 #### Viewing existing topics
 
-You can an overview existing GCN topics at `/admin/tracet/gcnstream`.
+You can an overview existing GCN topics at `/admin/TRACE-T/gcnstream`.
 
 This page provides statistics for each topic including:
 
@@ -216,16 +216,16 @@ Additionally, the `status` field indicates any errors with a topic. When a new t
 
 #### Adding a new topic
 
-> **Warning:** Once a topic is subscribed to, future notices will begin being saved by TraceT. To ensure disk space is not exhausted, be cautious of subscribing to topics that are extremely chatty or topics where notices contain embedded data sources.
+> **Warning:** Once a topic is subscribed to, future notices will begin being saved by TRACE-T. To ensure disk space is not exhausted, be cautious of subscribing to topics that are extremely chatty or topics where notices contain embedded data sources.
 
 To add a new topic:
 
-1. Go to `/admin/tracet/topic` and select "Add topic".
+1. Go to `/admin/TRACE-T/topic` and select "Add topic".
 2. Enter both the name of the topic (e.g. `gcn.classic.voevent.FERMI_GBM_FLT_POS`) and select its format (`JSON` or `XML`). Hint: To discover the available topics, proceed through the wizard at [https://gcn.nasa.gov/quickstart](https://gcn.nasa.gov/quickstart); the topic names will be available in the code snippets.
 
 > **Note:** The background listener may take up to 10 minutes to detect topic changes.
 
-Once added, you can view the full list of topics at `/admin/tracet/gcnstream`. Monitor the `status` field for any errors to ensure the topic is correctly configured.
+Once added, you can view the full list of topics at `/admin/TRACE-T/gcnstream`. Monitor the `status` field for any errors to ensure the topic is correctly configured.
 
 #### Deleting a topic
 
@@ -233,7 +233,7 @@ Once added, you can view the full list of topics at `/admin/tracet/gcnstream`. M
 
 To delete a topic:
 
-1. Go to `/admin/tracet/topic`.
+1. Go to `/admin/TRACE-T/topic`.
 2. Select the topic you wish to delete.
 3. Click delete. You will be asked to confirm the deletion and its associated notices.
 
@@ -241,23 +241,23 @@ To delete a topic:
 
 ### Filesystem
 
-Use Git to clone TraceT into a directory.
+Use Git to clone TRACE-T into a directory.
 
-When TraceT is run, the following files and directories will be modified:
+When TRACE-T is run, the following files and directories will be modified:
 
-* `db.sqlite3`, `db.sqlite3-wal`, `db.sqlite3-shm`: TraceT uses an filesystem database. These files are critical to the operation of TraceT: do not move, modify, or delete these files.
+* `db.sqlite3`, `db.sqlite3-wal`, `db.sqlite3-shm`: TRACE-T uses an filesystem database. These files are critical to the operation of TRACE-T: do not move, modify, or delete these files.
 * `logs/`: Two log files will be created in this directory one for each of Django and the background GCN listener.
 * `static/`: On each restart, this folder will be cleared and repopulated with static files that are used throughout Django. Production only.
 
 ### Required services
 
-A production installation of TraceT is comprised of 3 services:
+A production installation of TRACE-T is comprised of 3 services:
 
 * A `gunicorn` instance that runs Django itself.
 * A `caddy` webserver instance that faces the internet. This instance serves static files directly, and otherwise proxies traffic to the `gunicorn` instance to be served by Django.
 * A `listengcn` instance that listens for notices from Nasa's GCN network.
 
-By default, TraceT uses `sqlite3` for its database. This is a file-based database and doesn't require a separate service.
+By default, TRACE-T uses `sqlite3` for its database. This is a file-based database and doesn't require a separate service.
 
 ### Container deployment
 
@@ -267,7 +267,7 @@ To launch these services, from within the `docker/` directory run:
 
 `podman compose --profile prod up`
 
-This will launch all 3 services associated with the production profile. TraceT will be available via Caddy on port `8000` and `8443` serving `http` and `https`, respectively.
+This will launch all 3 services associated with the production profile. TRACE-T will be available via Caddy on port `8000` and `8443` serving `http` and `https`, respectively.
 
 > **Note:** An internet-facing service will need to forward incoming traffic from ports 80 and 443 to Caddy on 8000 and 8443, respectively. Configuring this will differ based on operating system. For reference, using `iptables`:
 >
@@ -278,7 +278,7 @@ For development purposes, one can run:
 
 `podman compose --profile dev up`
 
-This will omit Caddy and allow you to connect to Django directly on port `8123`. Never run TraceT on the open internet using this profile.
+This will omit Caddy and allow you to connect to Django directly on port `8123`. Never run TRACE-T on the open internet using this profile.
 
 Optionally, each service can be loaded individually. For example:
 
@@ -292,14 +292,14 @@ In the directory `docker/systemd/` there are four `systemd` unit files. Copy (or
 
 ```
 systemctl --user daemon-reload
-systemctl --user start tracet
+systemctl --user start TRACE-T
 ```
 
-TraceT may take some time to start on its first load as it will download and build the containers as well as run outstanding Django migrations. One can then check the status of the services by running `systemctl --user status 'tracet*'`.
+TRACE-T may take some time to start on its first load as it will download and build the containers as well as run outstanding Django migrations. One can then check the status of the services by running `systemctl --user status 'TRACE-T*'`.
 
-In addition to the parent unit, `tracet`, there are the child units `tracet-caddy`, `tracet-gunicorn`, and `tracet-gcnlisten`. Whilst it is normally sufficient to start/stop/restart the parent unit, occasionally it may be necessary to start/stop/restart a child unit.
+In addition to the parent unit, `TRACE-T`, there are the child units `TRACE-T-caddy`, `TRACE-T-gunicorn`, and `TRACE-T-gcnlisten`. Whilst it is normally sufficient to start/stop/restart the parent unit, occasionally it may be necessary to start/stop/restart a child unit.
 
-All `systemd` logs can be viewed using `journalctl --user -fu 'tracet*'`
+All `systemd` logs can be viewed using `journalctl --user -fu 'TRACE-T*'`
 
 > **Note:** This will install the `systemd` units as a user service. To ensure the service continues after the user is logged out, you will need to run `sudo loginctl enable-linger <USER>`.
 
@@ -309,11 +309,11 @@ Caddy will automatically attempt to issue an `SSL` certificate. As part of this 
 
 By default, Caddy will attempt to upgrade `HTTP` trafic to `HTTPS` automatically.
 
-> **Note:** If you do not yet have a domain or are testing TraceT internally, you can run TraceT using its `dev` profile instead (see [Container deployement](#Container-deployment)). For security reasons, never run TraceT using this profile when it is accessible by the internet.
+> **Note:** If you do not yet have a domain or are testing TRACE-T internally, you can run TRACE-T using its `dev` profile instead (see [Container deployement](#Container-deployment)). For security reasons, never run TRACE-T using this profile when it is accessible by the internet.
 
 ### Environment variables
 
-The containers are configured to load a `secrets.env` file that stores a number of sensitive variables required by TraceT.
+The containers are configured to load a `secrets.env` file that stores a number of sensitive variables required by TRACE-T.
 
 The file should be a line-delimited list of environment variables of the form `KEY=VALUE` or `KEY='VALUE'` (Use single quotes for values that include special characters.)
 
@@ -324,11 +324,11 @@ On a new installation, the following environment variables must be present:
    from django.core.management.utils import get_random_secret_key
    print(get_random_secret_key())
 * `SMTP_HOST`, `SMTP_PORT`, `SMTP_USER`, `SMTP_PASSWORD`: These fields are required by Django to send emails using an SMTP proxy. For example, it is possible to configure a Gmail account to function as an SMTP proxy by generating an "application password", in which case case the respective values are: `smtp.gmail.com`, `587`, `<email@gmail.com>`, `<password>`.
-* `GCN_CLIENT_ID`, `GCN_CLIENT_SECRET`, `GCN_GROUP_ID`: These fields are required for the background listener to connect to Nasa's GCN network and receive notices. `GCN_CLIENT_ID` and `GCN_CLIENT_SECRET` will be generated for you when you create an account at [https://gcn.nasa.gov/quickstart](https://gcn.nasa.gov/quickstart). `GCN_GROUP_ID` is an arbitrary identification name that is used by the Kafka service to track which notices it has already marked as read. This can be set to anything so long as it is unique, for example, the domain name of your TraceT instance. Changing this will cause Kafka to resend a backlog of notices; TraceT will ignore those that it has already recorded.
+* `GCN_CLIENT_ID`, `GCN_CLIENT_SECRET`, `GCN_GROUP_ID`: These fields are required for the background listener to connect to Nasa's GCN network and receive notices. `GCN_CLIENT_ID` and `GCN_CLIENT_SECRET` will be generated for you when you create an account at [https://gcn.nasa.gov/quickstart](https://gcn.nasa.gov/quickstart). `GCN_GROUP_ID` is an arbitrary identification name that is used by the Kafka service to track which notices it has already marked as read. This can be set to anything so long as it is unique, for example, the domain name of your TRACE-T instance. Changing this will cause Kafka to resend a backlog of notices; TRACE-T will ignore those that it has already recorded.
 
 Optionally, one can specify the following keys:
 
-* `HOSTNAME`: This sets the hostname and is required when run in production, i.e. with `--profile=prod`. `HOSTNAME` is used by Caddy to request an SSL certificate and is used by Django to whitelist allowed domains. Omit any leading protocol, i.e. use "tracet.domain.org", _not_ "https://tracet.domain.org".
+* `HOSTNAME`: This sets the hostname and is required when run in production, i.e. with `--profile=prod`. `HOSTNAME` is used by Caddy to request an SSL certificate and is used by Django to whitelist allowed domains. Omit any leading protocol, i.e. use "TRACE-T.domain.org", _not_ "https://TRACE-T.domain.org".
 * `DJANGO_DEBUG`: When set to true, run Django in debug mode. This should never be set in production environments and defaults to false.
 
 ## Appendix
@@ -339,7 +339,7 @@ XML and JSON are types of _structured_ data formats, and each has an associated 
 
 We provide some examples here, but we recommend the [XPath Cheatsheet](https://devhints.io/xpath) or the [JSONPath Cheatsheet](https://github.com/nirajp82/jsonpath-cheatsheet) as good references.
 
-> **Note:** Both XPath and JSONPath can query and return multiple objects from within a payload, but TraceT will only ever return the _first_ matching object.
+> **Note:** Both XPath and JSONPath can query and return multiple objects from within a payload, but TRACE-T will only ever return the _first_ matching object.
 
 #### XPath example
 
