@@ -171,6 +171,22 @@ Site administration actions can be performed by any user that has both of the fo
 1. They are a member of the `admin` group
 2. They have the `Staff` attribute selected (required to access any `/admin` page)
 
+### Trigger management
+
+There are two restricted properties of a trigger that can only be modified by an administrator. They are:
+
+* Changing a trigger's active/inactive status
+* Changing the weight of a trigger
+
+To modify both of these properties go to `/triggers`. You will see a screen similar to:
+
+![image](index/trigger-admin.png)
+
+* Change a trigger's weight by dragging the trigger's toggle to reorder the a trigger with respect to other triggers.
+* Set a trigger as (in)active by dragging the trigger's toggle _between_ each of the Active or Inactive tables.
+
+Then save your changes by clicking "Update triggers".
+
 ### User management
 
 #### Creating and modifying a new user
