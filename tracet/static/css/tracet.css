@@ -44,6 +44,11 @@ section {
     }
 }
 
+footer {
+    text-align: center;
+    font-size: 0.9rem;
+}
+
 .inlinemodal {
   border: 1px solid var(--color-bg-secondary);
   border-radius: var(--border-radius);
@@ -301,6 +306,11 @@ span.gcn-status.fail {
     &.clash {
         background-color: var(--color-maybe);
     }
+}
+
+div.pagination {
+    margin-top: 1.5rem;
+    text-align: center;
 }
 
 #trigger-meta {

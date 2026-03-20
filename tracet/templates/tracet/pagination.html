@@ -1,6 +1,6 @@
 {% load query_append %}
 
-<div class="pagination" style="text-align: center">
+<div class="pagination">
     <span class="step-links">
         {% if page.has_previous %}
         <a href="?{% query_append request page=page.previous_page_number %}">&lt; Previous</a>

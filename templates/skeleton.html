@@ -3,7 +3,7 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <title>TraceT | {% block title %}{% endblock %}</title>
+    <title>TRACE-T | {% block title %}{% endblock %}</title>
     <link href="{% static 'css/mvp.css' %}" rel="stylesheet">
     <link href="{% static 'css/tracet.css' %}" rel="stylesheet">
     <script src="https://kit.fontawesome.com/b93588f5db.js" crossorigin="anonymous"></script>
@@ -20,5 +20,10 @@
             {% block content %}{% endblock %}
         </main>
     {% endblock %}
+
+    <footer style="text-align: center">
+        <hr style="margin: 0 0 1em 0;">
+        <p><a href="https://github.com/ADACS-Australia/TraceT2">TRACE-T</a> is made available under the terms of the <a href="https://www.gnu.org/licenses/agpl-3.0.html">GNU Affero General Public License version 3</a>.</p>
+    </footer>
 </body>
 </html>
