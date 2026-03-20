@@ -214,7 +214,12 @@ class MWABase(Telescope):
 
     projectid = models.CharField(max_length=500)
     secure_key = models.CharField(max_length=500)
-    repointing_threshold = models.FloatField()
+    repointing_threshold = models.FloatField(
+        help_text=(
+            "In the case that an observation has already been requested, request a new observation "
+            "only if the updated pointing coordinates differ by more than this threshold. [degree]"
+        )
+    )
     tileset = models.CharField(
         choices=TileSet,
         help_text="Select the set of tiles to use for this observation. More tiles gives better sensitivity but at the expense of larger data requirements.",
@@ -288,7 +293,7 @@ class MWACorrelator(MWABase):
             ra = event.querylatest(self.ra_path, createdbefore)
             dec = event.querylatest(self.dec_path, createdbefore)
             return [SkyCoord(float(ra), float(dec), unit=("deg", "deg"))]
-        except (TypeError, ValueError):
+        except TypeError, ValueError:
             return []
 
     def prepare_request(self, observation: Observation):
@@ -354,7 +359,7 @@ class MWAVCS(MWABase):
             ra = event.querylatest(self.ra_path, createdbefore)
             dec = event.querylatest(self.dec_path, createdbefore)
             return [SkyCoord(float(ra), float(dec), unit=("deg", "deg"))]
-        except (TypeError, ValueError):
+        except TypeError, ValueError:
             return []
 
     def prepare_request(self, observation: Observation):
@@ -459,7 +464,7 @@ class MWAGW(MWABase):
             self.log("No skymap was found at the specified path.")
             return []
 
-        cachekey = f"MWAGW-pointings-{ hashlib.sha256(skymap.encode()).hexdigest() }"
+        cachekey = f"MWAGW-pointings-{hashlib.sha256(skymap.encode()).hexdigest()}"
         if (pointings := cache.get(cachekey)) is not None:
             return pointings
 
@@ -472,7 +477,7 @@ class MWAGW(MWABase):
                 f"skymap={url} index={index}",
             )
             skymap = fits.open(BytesIO(requests.get(url).content))[int(index)].data
-        except (ValueError, ValidationError):
+        except ValueError, ValidationError:
             self.log(
                 "Skymap isn't a URL; assuming it is an embedded FITS object encoded as Base64",
                 f"skymap={skymap}",
@@ -516,7 +521,9 @@ class MWAGW(MWABase):
                 if len(pointings) >= 4:
                     break
         except Exception as e:
-            logger.warning(f"Unable to generate 4 sweetspot pointings: skymap={skymap[:250]}")
+            logger.warning(
+                f"Unable to generate 4 sweetspot pointings: skymap={skymap[:250]}"
+            )
             self.log(
                 "An error occurred attempting to generate 4 sweetspot pointings",
                 e,
@@ -651,7 +658,7 @@ class ATCA(Telescope):
             ra = event.querylatest(self.ra_path, createdbefore)
             dec = event.querylatest(self.dec_path, createdbefore)
             return [SkyCoord(float(ra), float(dec), unit=("deg", "deg"))]
-        except (TypeError, ValueError):
+        except TypeError, ValueError:
             return []
 
     def prepare_request(self, observation: Observation):
@@ -691,7 +698,9 @@ class ATCA(Telescope):
             project=self.projectid,
             minExposureLength=minutes_to_hms(self.minimum_exposure),
             maxExposureLength=minutes_to_hms(self.maximum_exposure),
-            rightAscension=observation.pointings[0].ra.to_string(unit=hourangle, sep=":"),
+            rightAscension=observation.pointings[0].ra.to_string(
+                unit=hourangle, sep=":"
+            ),
             declination=observation.pointings[0].dec.to_string(sep=":"),
             scanType="Dwell",
         )
