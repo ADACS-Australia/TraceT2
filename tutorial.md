@@ -72,7 +72,7 @@ Further down in the XML, we can find the event time as `ISOTime`. Note that it's
 
 Finally, as a sanity check, ensure that the path to the event ID and event time is consistent across each of the notice types you are interested it. (This is a limitation of TRACE-T: you cannot have a single trigger that listens to notices from different observatories that have different notice structures.)
 
-## Creating an empty trigger
+## 2. Creating an empty trigger
 
 Now that we understand where the event ID and time are located in the SWIFT notices, let's start by creating an empty trigger.
 
@@ -108,7 +108,7 @@ For now, if you hover over the single green traffic light for each notice you'll
 
 Click through the associated notices and get a sense for the kinds of information each notice contains.
 
-## Adding some conditions
+## 3. Adding some conditions
 
 We want to add some conditions to our trigger. Specifically:
 
@@ -154,7 +154,7 @@ You may note that the integration time is set to MAYBE if false. MAYBE is a spec
 
 Finally, save the trigger.
 
-## Verifying the conditions
+## 4. Verifying the conditions
 
 We can inspect each archive of events and verify whether our current set of conditions correctly captures the events we want  (and ignores the ones we don't).
 
@@ -170,7 +170,7 @@ By the second notice, however, the updated coordinates have an error radius that
 >
 > What about the faded and washed out traffic lights? TRACE-T uses [condition inheritance](index.html#condition-inheritance). In this case both the integration time and star lock values are only given in the first notice and TRACE-T assumes that, in the absence of any other overriding values, these conditions remain satisfied. When a condition result is inherited from an earlier notice, TRACE-T depicts this using a faded traffic light value.
 
-## Configuration the telescope
+## 5. Configurating the telescope
 
 If you've verified that everything looks OK, it's time to finally add the configuration for the telescope. Click "edit trigger" and select your desired downstream telescope.
 
@@ -182,7 +182,7 @@ A lot of these configuration parameters are specific to the MWA with the excepti
 
 Save the trigger once more, and you'll note that back on the Trigger page, the events now have pointing coordinates based on the RA and Dec paths you provided.
 
-## Manually triggering
+## 6. Manually triggering
 
 In the normal course of events, a trigger is run each time a new notice arrives. Sometimes, however, you might want to manually intervene and force a trigger to be (re)evaluated for a specific event. This what the "Retrigger" button does above each event.
 
@@ -194,6 +194,6 @@ First, find an event that your trigger currently passes on, and click "Retrigger
 
 An orange or red observation button indicates a failure of some sort. In either case, you can click the button to inspect the observation details which includes the log. If an error occurred, the log can help you understand why.
 
-## Setting your trigger as active
+## 7. Setting your trigger as active
 
 By now you've confirmed your trigger works against numerous archived events and confirmed it is successfully communicating with the downstream telescope. If you're ready, you can now ask a TRACE-T administrator to mark your trigger as active. The administrator will also assign your trigger a weight which determines its order amongst any other configured triggers: higher ranked triggers get priority when requesting an observation.
