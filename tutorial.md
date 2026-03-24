@@ -60,12 +60,14 @@ Further down in the XML, we can find the event time as `ISOTime`. Note that it's
 >  Try using XPath to extract the event time that is contained in the `ISOTime` XML node. (Hint: to access the node text you will need to use the `text()` function.)
 
 <details>
-    <summary>See the answer:</summary>
-    <div markdown="1">
+<summary>See the answer:</summary>
+<div markdown="1">
+
 ```
 /voe:VOEvent/WhereWhen/ObsDataLocation/ObservationLocation/AstroCoords/Time/TimeInstant/ISOTime/text()
 ```
-    </div>
+
+</div>
 </details>
 
 Finally, as a sanity check, ensure that the path to the event ID and event time is consistent across each of the notice types you are interested it. (This is a limitation of TRACE-T: you cannot have a single trigger that listens to notices from different observatories that have different notice structures.)
