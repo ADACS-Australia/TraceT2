@@ -59,7 +59,7 @@ Further down in the XML, we can find the event time as `ISOTime`. Note that it's
 >
 >  Try using XPath to extract the event time that is contained in the `ISOTime` XML node. (Hint: to access the node text you will need to use the `text()` function.)
 
-<details>
+<details markdown="1">
     <summary>See the answer:</summary>
 
 ```
