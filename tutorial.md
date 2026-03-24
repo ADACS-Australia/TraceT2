@@ -17,9 +17,9 @@ In this tutorial, we will guide you through writing your first trigger. You will
 * Filter these events according to a number of conditions
 * Trigger observations with the Murchison Widefield Array (MWA) telescope.
 
-## 1. Getting acquinted with the SWIFT notices
+## 1. Getting acquainted with the SWIFT notices
 
-Our aim is to consume notices and extract the relevant peices of information we need. Our first task is to become acquainted with the format of the particular notices that we are interested in.
+Our aim is to consume notices and extract the relevant pieces of information we need. Our first task is to become acquainted with the format of the particular notices that we are interested in.
 
 To do this, first go to [https://tracet2.duckdns.org/notices/](https://tracet2.duckdns.org/notices/) where we can view all presently archived notices.
 
@@ -33,7 +33,7 @@ For example:
 
 ![](tutorial/notice-detail.png)
 
-We see here the noice topic, the notice's annoucement time (as well the as time it was received by TRACE-T) and then the notice payload itself. This payload is in the XML format and includes some metadata such as the notice author, the notice date, and then information about the instrument and the event itself.
+We see here the notice topic, the notice's announcement time (as well the as time it was received by TRACE-T) and then the notice payload itself. This payload is in the XML format and includes some metadata such as the notice author, the notice date, and then information about the instrument and the event itself.
 
 At this stage, we are interested in just two things that we will need when we first create the TRACE-T trigger:
 
@@ -57,7 +57,7 @@ Further down in the XML, we can find the event time as `ISOTime`. Note that it's
 
 > **Now it's your turn:**
 >
->  Try using XPath to extract the event time that is contained in the `ISOTime` XML node. (Hint: to access the node text you will need to use the `text()` function.)
+> Try using XPath to extract the event time that is contained in the `ISOTime` XML node. (Hint: to access the node text you will need to use the `text()` function.)
 
 <details>
 <summary>See the answer:</summary>
@@ -117,7 +117,7 @@ We want to add some conditions to our trigger. Specifically:
 * We want an integration time of less than 2.048 seconds (for anything greater we will leave it to be manually overridden).
 * We require SWIFT's starlock to be working correctly (otherwise the instrument might be reporting garbage coordinate values).
 
-Let's start by adding the equatorial condition. Click "edit trigger" and then "Add numeric range condtion":
+Let's start by adding the equatorial condition. Click "edit trigger" and then "Add numeric range condition":
 
 ![](tutorial/trigger-range-condition.png)
 
@@ -133,11 +133,12 @@ Finally, if this condition is true we want to return a FAIL result. When complet
 
 Click save and now inspect the event listing: you'll notice a second traffic light appears under the "Current conditions" that indicates this new equatorial declination condition.
 
-For a trigger to be successful, every condition must return a PASS. A single FAIL result we caust the trigger overall to fail.
+For a trigger to be successful, every condition must return a PASS. A single FAIL result we cause the trigger overall to fail.
 
 > **Now it's your turn:**
 >
 > Have a go adding numeric range conditions for the following:
+>
 > * The second declination requirement (Dec < 10°)
 > * The error radius (0 < err < 0.05)
 > * The integration time (`Integ_Time` > 2.048).
@@ -174,7 +175,7 @@ By the second notice, however, the updated coordinates have an error radius that
 
 If you've verified that everything looks OK, it's time to finally add the configuration for the telescope. Click "edit trigger" and select your desired downstream telescope.
 
-In this case we are going to use the MWA Correaltor with the following configuration:
+In this case we are going to use the MWA Correlator with the following configuration:
 
 ![](tutorial/trigger-telescope.png)
 
@@ -184,7 +185,7 @@ Save the trigger once more, and you'll note that back on the Trigger page, the e
 
 ## 7. Manually triggering
 
-In the normal course of events, a trigger is run each time a new notice arrives. Sometimes, however, you might want to manually intervene and force a trigger to be (re)evaluated for a specific event. This what the "Retrigger" button does above each event.
+In the normal course of events, a trigger is run each time a new notice arrives. Sometimes, however, you might want to manually intervene and force a trigger to be (re)evaluated for a specific event. This is the purpose of the "Retrigger" button above each event.
 
 We can also manual retriggering to test our trigger. At the moment our trigger is still set to inactive and, when in this state, all communications with the downstream telescope, such as the MWA, will be marked as "testing" only.
 
@@ -196,4 +197,6 @@ An orange or red observation button indicates a failure of some sort. In either 
 
 ## 8. Setting your trigger as active (optional)
 
-By now you've confirmed your trigger works against numerous archived events and confirmed it is successfully communicating with the downstream telescope. If you're ready, you can now ask a TRACE-T administrator to mark your trigger as active. The administrator will also assign your trigger a weight which determines its order amongst any other configured triggers: higher ranked triggers get priority when requesting an observation.
+By now you've confirmed your trigger works against numerous archived events and confirmed it is successfully communicating with the downstream telescope. If you're ready, you can now ask a TRACE-T administrator to mark your trigger as active. Once active, your trigger will switch to making real observation requests of downstream instruments.
+
+The administrator will also assign your trigger a weight which determines its order amongst any other configured triggers: higher ranked triggers get priority when requesting an observation.
