@@ -21,7 +21,7 @@ In this tutorial, we will guide you through writing your first trigger. You will
 
 Our aim is to consume notices and extract the relevant peices of information we need. Our first task is to become acquainted with the format of the particular notices that we are interested in.
 
-To do this, first go to https://tracet2.duckdns.org/notices/ where we can view all presently archived notices.
+To do this, first go to [https://tracet2.duckdns.org/notices/](https://tracet2.duckdns.org/notices/) where we can view all presently archived notices.
 
 For SWIFT, we are interested in notices with the topics `gcn.classic.voevent.SWIFT_BAT_GRB_POS_ACK` or `gcn.classic.voevent.SWIFT_XRT_POSITION`. Use the filter to select one of these. For example:
 
@@ -76,7 +76,7 @@ Finally, as a sanity check, ensure that the path to the event ID and event time 
 
 Now that we understand where the event ID and time are located in the SWIFT notices, let's start by creating an empty trigger.
 
-Go to `/triggers/create` and:
+Go to [https://tracet2.duckdns.org/triggers/create/](https://tracet2.duckdns.org/triggers/create/) and:
 
 * Give it a descriptive name (e.g. "SWIFT GRBs")
 * Select both `gcn.classic.voevent.SWIFT_BAT_GRB_POS_ACK` and `gcn.classic.voevent.SWIFT_XRT_POSITION` topics (by holding down the Control or Command buttons)
