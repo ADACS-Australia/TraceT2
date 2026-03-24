@@ -40,7 +40,7 @@ At this stage, we are interested in just two things that we will need when we fi
 * **Event ID:** A unique code that groups together notices that pertain to a single astronomical event
 * **Event time:** The time the event occurred
 
-Specifically, we need to be able to tell TRACE-T how to extract these values using either XPath (form XML payloads) or JSON-Path (for JSON payloads). [You will need to become comfortable with these expression languages.](index.html#xpath-and-jsonpath)
+Specifically, we need to be able to tell TRACE-T how to extract these values using either XPath (form XML payloads) or JSON-Path (for JSON payloads). [You will need to become comfortable with these expression languages.](index.md#xpath-and-jsonpath)
 
 For SWIFT, notices are grouped together using an event ID known as the `TrigID`. Every SWIFT notice has this field and this allows us to know when disparate notices are referring to the same astronomical event.
 
@@ -151,7 +151,7 @@ When complete we have the following conditions:
 
 ![](tutorial/trigger-all-conditions.png)
 
-You may note that the integration time is set to MAYBE if false. MAYBE is a special value that is treated differently depending on what caused the trigger evaluation. In this case, if the integration time is less than 2.048, the MAYBE result allows for manual override. See [here](index.html#conditions) for more information.
+You may note that the integration time is set to MAYBE if false. MAYBE is a special value that is treated differently depending on what caused the trigger evaluation. In this case, if the integration time is less than 2.048, the MAYBE result allows for manual override. See [here](index.md#conditions) for more information.
 
 Finally, save the trigger.
 
@@ -169,7 +169,7 @@ By the second notice, however, the updated coordinates have an error radius that
 
 > **Note:**
 >
-> What about the faded and washed out traffic lights? TRACE-T uses [condition inheritance](index.html#condition-inheritance). In this case both the integration time and star lock values are only given in the first notice and TRACE-T assumes that, in the absence of any other overriding values, these conditions remain satisfied. When a condition result is inherited from an earlier notice, TRACE-T depicts this using a faded traffic light value.
+> What about the faded and washed out traffic lights? TRACE-T uses [condition inheritance](index.md#condition-inheritance). In this case both the integration time and star lock values are only given in the first notice and TRACE-T assumes that, in the absence of any other overriding values, these conditions remain satisfied. When a condition result is inherited from an earlier notice, TRACE-T depicts this using a faded traffic light value.
 
 ## 6. Configuring the telescope
 
