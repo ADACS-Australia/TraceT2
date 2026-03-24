@@ -8,6 +8,8 @@ filename: index.md
 
 This documentation describes TRACE-T, or Transient RApid-response using Coordinated Event Triggering. TRACE-T is a web application that listens for notices from upstream, early detection instruments and automates the triggering of downstream observatories.
 
+For quick, hands-on introduction, check out the [tutorial](tutorial.html).
+
 1. Contents
 {:toc}
 

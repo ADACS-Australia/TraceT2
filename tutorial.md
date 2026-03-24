@@ -1,3 +1,8 @@
+---
+title: TRACE-T Tutorial
+filename: tutorial.md
+---
+
 # Tutorial
 
 TRACE-T lets you listen to notices broadcast via Nasa's General Coordinates Network (GCN) and (conditionally) trigger rapid follow-up observations.
