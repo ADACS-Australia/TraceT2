@@ -354,6 +354,7 @@ div.pagination {
             &.ellipsis, &.current {
                 padding: 0.5em;
                 min-width: 2em;
+            }
         }
     }
 }
