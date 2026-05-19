@@ -12,7 +12,7 @@ from django.core import mail
 from django.urls import reverse
 from django.utils import timezone
 
-from tracet.models.conditions import Decision
+from tracet.models.conditions import Decision, ExpirationCondition
 from tracet.models.fields import JXPathField
 from tracet.models.telescopes import Observation, Telescope
 
@@ -79,8 +79,9 @@ class Trigger(models.Model):
 
         return event
 
-    def get_conditions(self):
+    def get_conditions(self, now):
         return [
+            ExpirationCondition(self.expiry, now, self.time_path),
             *self.numericrangeconditions.all(),
             *self.booleanconditions.all(),
             *self.equalityconditions.all(),

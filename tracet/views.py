@@ -16,6 +16,7 @@ from django.shortcuts import (
     HttpResponse,
 )
 from django.urls import reverse
+from django.utils import timezone
 from django.views import View
 
 from . import models, forms, filters
@@ -406,7 +407,7 @@ class TriggerView(View):
             {
                 "user": user,
                 "trigger": trigger,
-                "conditions": trigger.get_conditions(),
+                "conditions": trigger.get_conditions(timezone.now()),
                 "events": events,
             },
         )
