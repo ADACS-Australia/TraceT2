@@ -56,11 +56,11 @@ class Decision(models.Model):
         if len(notices) == 0:
             factors = [Factor(condition="Event contains no notices", vote=Vote.FAIL)]
         else:
-            conditions = self.event.trigger.get_conditions(now=self.created)
+            conditions = self.event.trigger.get_conditions()
 
             # Initialize factors list with oldest notice
             notice = notices.pop(0)
-            factors = [c.vote(notice, self.event) for c in conditions]
+            factors = [c.vote(notice, self) for c in conditions]
 
             # Append all additional factors from remaining notices
             for notice in notices:
@@ -68,7 +68,7 @@ class Decision(models.Model):
                     # The following + is doing a lot!
                     #   - Indeterminate votes (== None) will inherit most recent non-null Factor
                     #   - Otherwise, we give precedence to the most recent Factor
-                    factors[i] += c.vote(notice, self.event)
+                    factors[i] += c.vote(notice, self)
 
         self.factors.add(*factors, bulk=False)
 
@@ -206,20 +206,19 @@ class Factor(models.Model):
 
 
 class ExpirationCondition:
-    def __init__(self, expiration, now, time_path):
+    def __init__(self, expiration):
         self.expiration = expiration
-        self.now = now
-        self.time_path = time_path
 
     def __str__(self):
-        return f"IF {self.now} - {self.time_path} <= {self.expiration} [minute] THEN Pass ELSE Maybe"
+        return f"IF NOW - EVENT_TIME <= {self.expiration} [minute] THEN Pass ELSE Maybe"
 
-    def vote(self, notice: "Notice", event: "Event") -> Factor:
-        # Ignore the notice, since we have all the information we need from our constructor
-        if self.now - event.time <= datetime.timedelta(minutes=self.expiration):
-            return Factor(condition=str(self), vote=Vote.PASS)
+    def vote(self, notice: "Notice", decision: Decision) -> Factor:
+        condition = f"IF {decision.created} - {decision.event.time} <= {self.expiration} [minute] THEN Pass ELSE Maybe"
+
+        if decision.created - decision.event.time <= datetime.timedelta(minutes=self.expiration):
+            return Factor(condition=condition, vote=Vote.PASS)
         else:
-            return Factor(condition=str(self), vote=Vote.MAYBE)
+            return Factor(condition=condition, vote=Vote.MAYBE)
 
 
 class NumericRangeCondition(models.Model):
@@ -235,7 +234,7 @@ class NumericRangeCondition(models.Model):
     def __str__(self):
         return f"IF {self.val1} ≤ {self.selector} < {self.val2} THEN {self.get_if_true_display()} ELSE {self.get_if_false_display()}"
 
-    def vote(self, notice: "Notice", event: "Event") -> Factor:
+    def vote(self, notice: "Notice", decision: Decision) -> Factor:
         try:
             val = notice.query(self.selector)
             if val is None:
@@ -261,7 +260,7 @@ class BooleanCondition(models.Model):
     def __str__(self):
         return f"IF {self.selector} THEN {self.get_if_true_display()} ELSE {self.get_if_false_display()}"
 
-    def vote(self, notice: "Notice", event: "Event") -> Factor:
+    def vote(self, notice: "Notice", decision: Decision) -> Factor:
         try:
             val = notice.query(self.selector)
             if val is None:
@@ -298,7 +297,7 @@ class EqualityCondition(models.Model):
     def get_vals(self):
         return [line.strip() for line in self.vals.strip().splitlines()]
 
-    def vote(self, notice: "Notice", event: "Event") -> Factor:
+    def vote(self, notice: "Notice", decision: Decision) -> Factor:
         try:
             val = notice.query(self.selector)
             if val is None:

@@ -79,9 +79,9 @@ class Trigger(models.Model):
 
         return event
 
-    def get_conditions(self, now):
+    def get_conditions(self):
         return [
-            ExpirationCondition(self.expiry, now, self.time_path),
+            ExpirationCondition(self.expiry),
             *self.numericrangeconditions.all(),
             *self.booleanconditions.all(),
             *self.equalityconditions.all(),

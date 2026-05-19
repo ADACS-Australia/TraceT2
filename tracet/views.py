@@ -407,7 +407,7 @@ class TriggerView(View):
             {
                 "user": user,
                 "trigger": trigger,
-                "conditions": trigger.get_conditions(timezone.now()),
+                "conditions": trigger.get_conditions(),
                 "events": events,
             },
         )
