@@ -383,9 +383,10 @@ class TriggerView(View):
         for event in events:
             event.noticess = list(event.notices.order_by("created"))
             for notice in event.noticess:
+                # Retrieve or create simulated decisions for each event on this page
                 decision, _ = models.Decision.objects.get_or_create(
                     event=event,
-                    created=notice.created,
+                    created=notice.received,
                     source=models.Decision.Source.SIMULATED,
                 )
                 notice.decision = decision

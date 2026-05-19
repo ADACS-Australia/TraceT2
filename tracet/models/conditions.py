@@ -58,7 +58,7 @@ class Decision(models.Model):
         else:
             conditions = self.event.trigger.get_conditions()
 
-            # Insert expiration condition
+            # Insert hardcoded expiration condition
             conditions.insert(0, ExpirationCondition(self.event, self.created))
 
             # Initialize factors list with oldest notice
