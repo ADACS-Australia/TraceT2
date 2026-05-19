@@ -1,15 +1,27 @@
 {% load query_append %}
+{% load elided_page_range %}
 
-<div class="pagination">
-    <span class="step-links">
-        {% if page.has_previous %}
-        <a href="?{% query_append request page=page.previous_page_number %}">&lt; Previous</a>
-        {% endif %}
-        <span class="current">
-            &nbsp;&nbsp;[Page {{ page.number }} of {{ page.paginator.num_pages }}]&nbsp;&nbsp;
-        </span>
-        {% if page.has_next %}
-        <a href="?{% query_append request page=page.next_page_number %}">Next &gt;</a>
-        {% endif %}
-    </span>
-</div>
+{% if page.paginator.num_pages > 1 %}
+    <div class="pagination">
+        <ol>
+            {% if page.has_previous %}
+                <li class="previous"><a href="?{% query_append request page=page.previous_page_number %}">&lt; Previous</a></li>
+            {% endif %}
+
+            {% elided_page_range page.paginator page.number as pagenumbers %}
+            {% for pagenumber in pagenumbers %}
+                {% if pagenumber == "…"%}
+                    <li class="ellipsis">{{ pagenumber }}</li>
+                {% elif pagenumber == page.number %}
+                    <li class="current">{{ pagenumber }}</li>
+                {% else %}
+                    <li><a href="?{% query_append request page=pagenumber %}">{{ pagenumber }}</a></li>
+                {% endif %}
+            {% endfor %}
+
+            {% if page.has_next %}
+                <li class="next"><a href="?{% query_append request page=page.next_page_number %}">Next &gt;</a></li>
+            {% endif %}
+        </ol>
+    </div>
+{% endif %}
