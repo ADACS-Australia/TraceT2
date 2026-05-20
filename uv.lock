@@ -152,19 +152,6 @@ wheels = [
 ]
 
 [[package]]
-name = "gcn-kafka"
-version = "0.3.4"
-source = { registry = "https://pypi.org/simple" }
-dependencies = [
-    { name = "certifi" },
-    { name = "confluent-kafka" },
-]
-sdist = { url = "https://files.pythonhosted.org/packages/e1/6c/bd30844a4c3f48de2e2cbd2a2101e9ac7346c41a56c59d825a37ffcfc1fa/gcn_kafka-0.3.4.tar.gz", hash = "sha256:47ed3dbc94d1d981374e7e573a05ecc17356e577409a363f32a9891b1a7ad2be", size = 12550, upload-time = "2025-07-08T17:28:37.855Z" }
-wheels = [
-    { url = "https://files.pythonhosted.org/packages/85/0a/643fc270208f2dd2a2524d429a31a5361ca4601331e2dcaf293e9576fa76/gcn_kafka-0.3.4-py3-none-any.whl", hash = "sha256:dc7e5b5d05fa7ca05d6fcdc3bad6914bbae41bb6a0798e1b4cf48da54afe933c", size = 9347, upload-time = "2025-07-08T17:28:36.716Z" },
-]
-
-[[package]]
 name = "gunicorn"
 version = "25.0.1"
 source = { registry = "https://pypi.org/simple" }
@@ -453,10 +440,11 @@ source = { virtual = "." }
 dependencies = [
     { name = "astropy" },
     { name = "astropy-healpix" },
+    { name = "certifi" },
+    { name = "confluent-kafka" },
     { name = "django" },
     { name = "django-filter" },
     { name = "django-nested-admin" },
-    { name = "gcn-kafka" },
     { name = "gunicorn" },
     { name = "jsonpath-rfc9535" },
     { name = "lxml" },
@@ -470,10 +458,11 @@ dependencies = [
 requires-dist = [
     { name = "astropy", specifier = ">=7.1.1" },
     { name = "astropy-healpix", specifier = ">=1.1.2" },
+    { name = "certifi", specifier = ">=2025.11.12" },
+    { name = "confluent-kafka", specifier = ">=2.12.2" },
     { name = "django", specifier = ">=5.2.7" },
     { name = "django-filter", specifier = ">=25.2" },
     { name = "django-nested-admin", specifier = ">=4.1.6" },
-    { name = "gcn-kafka", specifier = ">=0.3.4" },
     { name = "gunicorn", specifier = ">=25.0.1" },
     { name = "jsonpath-rfc9535", specifier = ">=0.1.6" },
     { name = "lxml", specifier = ">=6.0.2" },

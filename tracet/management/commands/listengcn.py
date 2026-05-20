@@ -2,10 +2,10 @@ import json
 import logging
 import os
 
+import certifi
 import confluent_kafka
 import datetime
 import dateutil.parser
-from gcn_kafka import Consumer
 
 from django.core.cache import cache
 from django.core.exceptions import ValidationError
@@ -30,17 +30,21 @@ class Command(BaseCommand):
             logger.info("Creating new GCN consumer...")
             topics = ["gcn.heartbeat"] + [t.name for t in Topic.objects.all()]
 
-            config = {
+            consumer = confluent_kafka.Consumer({
+                "bootstrap.servers": "gcn.nasa.gov",
                 "group.id": os.getenv("GCN_GROUP_ID"),
                 "auto.offset.reset": "earliest",
-                "enable.auto.commit": False,  # We will manually commit after saving the notice
-            }
+                "enable.auto.commit": False,
+                "security.protocol": "sasl_ssl",
+                "sasl.mechanism": "OAUTHBEARER",
+                "sasl.oauthbearer.method": "oidc",
+                "sasl.oauthbearer.client.id": os.getenv("GCN_CLIENT_ID"),
+                "sasl.oauthbearer.client.secret": os.getenv("GCN_CLIENT_SECRET"),
+                "sasl.oauthbearer.token.endpoint.url": "https://auth.gcn.nasa.gov/oauth2/token",
+                "ssl.ca.location": certifi.where(),
+                "https.ca.location": certifi.where(),
+            })
 
-            consumer = Consumer(
-                config,
-                client_id=os.getenv("GCN_CLIENT_ID"),
-                client_secret=os.getenv("GCN_CLIENT_SECRET"),
-            )
             consumer.subscribe(topics)
 
             # Record the time we created the consumer
