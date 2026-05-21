@@ -1,4 +1,5 @@
 from django.db import connection
+from django.core.cache import cache
 from django.contrib import admin
 import django.contrib.auth as auth
 
@@ -8,14 +9,36 @@ from . import models
 
 @admin.register(models.Stream)
 class Stream(admin.ModelAdmin):
-    list_display = ["name", "domain", "last_polled"]
+    list_display = ["name", "domain", "last_polled", "enabled"]
     fields = ["name", "domain", "config", "enabled", "last_polled"]
     readonly_fields = ["last_polled"]
+
+    # The following hooks are to detect changes to Stream configuration
+    # made via the admin interface and trigger the listener to requery and make new
+    # Kafka connections.
+    def save_model(self, *args, **kwargs):
+        cache.set("reset_streams", True)
+        return super().save_model(*args, **kwargs)
+
+    def delete_model(self, *args, **kwargs):
+        cache.set("reset_streams", True)
+        return super().delete_model(*args, **kwargs)
+
+    def delete_queryset(self, *args, **kwargs):
+        cache.set("reset_streams", True)
+        return super().delete_queryset(*args, **kwargs)
 
 
 @admin.register(models.Topic)
 class Topic(admin.ModelAdmin):
-    list_display = ["name", "stream", "type", "notice_count", "payload_filesize", "status"]
+    list_display = [
+        "name",
+        "stream",
+        "type",
+        "notice_count",
+        "payload_filesize",
+        "status",
+    ]
     readonly_fields = ["status"]
 
     @admin.display(description="Payload size [MB]")
@@ -38,6 +61,21 @@ class Topic(admin.ModelAdmin):
 
     def has_change_permission(self, request, obj=None):
         return False  # Disable editing existing entries
+
+    # The following hooks are to detect changes to Topic configuration
+    # made via the admin interface and trigger the listener to requery and make new
+    # Kafka connections.
+    def save_model(self, *args, **kwargs):
+        cache.set("reset_streams", True)
+        return super().save_model(*args, **kwargs)
+
+    def delete_model(self, *args, **kwargs):
+        cache.set("reset_streams", True)
+        return super().delete_model(*args, **kwargs)
+
+    def delete_queryset(self, *args, **kwargs):
+        cache.set("reset_streams", True)
+        return super().delete_queryset(*args, **kwargs)
 
 
 # auth.models.User has already been registered with Django admin

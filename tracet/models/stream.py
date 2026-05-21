@@ -1,4 +1,5 @@
 import copy
+import datetime
 import os
 import json
 import logging
@@ -20,9 +21,13 @@ class PrettyJSONEncoder(json.JSONEncoder):
 class Stream(models.Model):
     name = models.CharField(max_length=500)
     domain = models.CharField(max_length=500)
-    config = models.JSONField(default=dict, encoder=PrettyJSONEncoder)
+    config = models.JSONField(
+        default=dict, blank=True, null=True, encoder=PrettyJSONEncoder
+    )
     enabled = models.BooleanField(default=False)
-    last_polled = models.DateTimeField(null=True)
+    last_polled = models.DateTimeField(
+        default=datetime.datetime(1900, 1, 1, tzinfo=datetime.UTC)
+    )
 
     def __str__(self):
         return self.name
@@ -47,9 +52,16 @@ class Stream(models.Model):
         logger.debug(f"Connecting to stream {self.name} with Kafka config: {config}")
         consumer = confluent_kafka.Consumer(config)
 
-        topics = [t.name for t in self.topics.all()]
-        logger.debug(f"Stream {self.name} subscribing to { len(topics) } topics: { " ".join(topics) }")
-        consumer.subscribe(topics)
+        # Calling self.topics will error if we haven't been saved to the database.
+        # Use the presence of the primary key to make this determination.
+        if self.id:
+            topics = [t.name for t in self.topics.all()]
+            logger.debug(
+                f"Stream {self.name} subscribing to {len(topics)} topics: {' '.join(topics)}"
+            )
+            # It is an error to call subscribe() with an empty list.
+            if len(topics):
+                consumer.subscribe(topics)
 
         return consumer
 
@@ -66,9 +78,7 @@ class Stream(models.Model):
                 "Stream validation failed due to kafka connection test failure",
                 exc_info=e,
             )
-            raise ValidationError(
-                "Incorrect KAFKA configuration: " + str(e)
-            )
+            raise ValidationError("Incorrect KAFKA configuration: " + str(e))
         else:
             logger.error(f"Stream validation succeeded ({self.name} @ {self.domain})")
 

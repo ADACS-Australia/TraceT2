@@ -35,14 +35,12 @@ class Home(View):
             .order_by("-created")
             .first()
         )
-        laggy_stream = (
-            models.Stream.objects.filter(enabled=True).order_by("-last_polled").first()
-        )
-        if laggy_stream and laggy_stream.last_polled:
+        if laggy_stream := models.Stream.objects.filter(enabled=True).order_by("last_polled").first():
             kafkaok = datetime.datetime.now(
                 datetime.UTC
             ) - laggy_stream.last_polled < datetime.timedelta(seconds=15)
         else:
+            # There are no enabled streams
             kafkaok = False
 
         mostrecentnotice = models.Notice.objects.order_by("-created").first()

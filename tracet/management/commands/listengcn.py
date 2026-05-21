@@ -1,16 +1,17 @@
 import logging
 import os
+import threading
 import time
 
 import confluent_kafka
 import datetime
-import dateutil.parser
 
-import django
+from django.core.cache import cache
 from django.core.exceptions import ValidationError
 from django.core.management.base import BaseCommand
 
 from tracet.models import Notice, Stream, Topic
+from tracet.utils import ThreadsafeBool
 
 
 logger = logging.getLogger(__name__)
@@ -23,110 +24,119 @@ class Command(BaseCommand):
         if not os.getenv("GCN_GROUP_ID"):
             raise Exception("No GCN_GROUP_ID found in environment variables")
 
-        # Every 5 minutes or so, requery the enabled set of streams
-        # This is a lazy way for us to detect:
+        # If the `reset_streams` flag has been set to True, we assume something has changed
+        # with regards to:
         #  - new stream
         #  - new topics
-
-        # TODO:
-        # Catch exceptions from call to make_exception(), and from consume()
-
+        # Then simply let existing threads die and respawn listeners with updated config.
         while True:
-            logger.info("(Re)connecting to Kafka streams")
+            cache.set("reset_streams", False)
 
-            streams, consumers = [], []
-            for stream in Stream.objects.filter(enabled=True):
-                try:
-                    consumers.append(stream.make_consumer())
-                    streams.append(stream)
-                except Exception as e:
-                    logger.error(
-                        f"Stream {stream.name} failed to connect to remote Kakfa broker",
-                        exc_info=e,
-                    )
-                    # TODO Record failure somewhere?
+            keepalive = ThreadsafeBool(True)
+            threads = [
+                threading.Thread(target=Command.listen, args=(stream, keepalive))
+                for stream in Stream.objects.filter(enabled=True)
+            ]
+
+            for thread in threads:
+                thread.start()
+
+            while not cache.get("reset_streams", False):
+                time.sleep(5)
+
+            keepalive(False)
+
+    @staticmethod
+    def listen(stream: Stream, keepalive: ThreadsafeBool):
+        try:
+            consumer = stream.make_consumer()
+        except Exception as e:
+            logger.error(
+                f"Stream {stream.name} failed to connect to remote Kakfa broker",
+                exc_info=e,
+            )
+            raise
+        else:
+            logger.info(f"Stream {stream.name} successfully connected to Kafka broker")
+
+        while keepalive:
+            # Retrieve new batch of pending messages
+            try:
+                messages = consumer.consume(timeout=1)
+            except Exception as e:
+                logger.error(
+                    f"Stream {stream.name} returned an error when attempting to consume new messages",
+                    exc_info=e,
+                )
+                raise
+            else:
+                # Record time of successful poll
+                # To avoid overriding any changes that have been made to stream in the interim,
+                # we make a call to update() rather than the objects save() method.
+                Stream.objects.filter(id=stream.id).update(
+                    last_polled=datetime.datetime.now(datetime.UTC)
+                )
+
+            # Process messages
+            for message in messages:
+                # Process the message timestamp
+                timestamptype, created = message.timestamp()
+                if timestamptype == confluent_kafka.TIMESTAMP_NOT_AVAILABLE:
+                    created = None
                 else:
-                    logger.info(f"Stream {stream.name} successfully connected to Kafka broker")
+                    # Kafka timestamp is in milliseconds since Unix epoch
+                    created = datetime.datetime.fromtimestamp(
+                        created / 1000, datetime.UTC
+                    )
 
-            # Record the time we created the consumer
-            t0 = datetime.datetime.now()
+                logger.info(
+                    f"Recieved a new message ({stream.name} | {message.topic()} #{message.offset()} @ {created})"
+                )
 
-            while datetime.datetime.now() - t0 < datetime.timedelta(minutes=5):
-                for stream, consumer in zip(streams, consumers):
-                    # Retrieve new batch of pending messages
+                if message.error():
+                    logger.warning(message.error())
+
                     try:
-                        messages = consumer.consume(timeout=1, num_messages=100)
+                        topic = Topic.objects.get(name=message.topic())
+                        topic.status = f"Error ({message.error().str()})"
+                        topic.full_clean()
+                        topic.save()
                     except Exception as e:
                         logger.error(
-                            f"Stream {stream.name} returned an error when attempting to consume new messages",
+                            "Tried and failed to record Kafka error message",
+                            exc_info=e,
+                        )
+                else:
+                    try:
+                        topic = Topic.objects.get(name=message.topic())
+                        topic.status = f"OK (Last message received: {datetime.datetime.now(datetime.UTC)})"
+                        topic.full_clean()
+                        topic.save()
+
+                        notice = Notice(
+                            topic=topic,
+                            created=created,
+                            offset=message.offset(),
+                            payload=message.value(),
+                        )
+                        notice.full_clean()
+                        notice.save()
+
+                        # Let the service know we have processed this message
+                        consumer.commit(message)
+                    except ValidationError as e:
+                        logger.error(
+                            "A ValidationError occurred saving a new notice; assuming we have already seen this notice",
                             exc_info=e,
                         )
 
-                        # Sleep for one section and then try to consume again.
-                        time.sleep(1)
-                        continue
-                    else:
-                        # Record time of successful poll
-                        stream.last_polled = datetime.datetime.now(datetime.UTC)
-                        stream.save()
-
-                    # Process messages
-                    for message in messages:
-                        # Process the message timestamp
-                        timestamptype, created = message.timestamp()
-                        if timestamptype == confluent_kafka.TIMESTAMP_NOT_AVAILABLE:
-                            created = None
-                        else:
-                            # Kafka timestamp is in milliseconds since Unix epoch
-                            created = datetime.datetime.fromtimestamp(
-                                created / 1000, datetime.UTC
-                            )
-
-                        logger.info(
-                            f"Recieved a new message ({stream.name} | {message.topic()} #{message.offset()} @ {created})"
+                        # Assume we've received the same offset twice, in which case
+                        # commit to acknowledge receipt
+                        consumer.commit(message)
+                    except Exception as e:
+                        logger.error(
+                            "An error occurred saving a new notice:", exc_info=e
                         )
 
-                        if message.error():
-                            logger.warning(message.error())
-
-                            try:
-                                topic = Topic.objects.get(name=message.topic())
-                                topic.status = f"Error ({message.error().str()})"
-                                topic.full_clean()
-                                topic.save()
-                            except Exception as e:
-                                logger.error(
-                                    "Tried and failed to record Kafka error message",
-                                    exc_info=e,
-                                )
-                        else:
-                            try:
-                                topic = Topic.objects.get(name=message.topic())
-                                topic.status = f"OK (Last message received: {datetime.datetime.now(datetime.UTC)})"
-                                topic.full_clean()
-                                topic.save()
-
-                                notice = Notice(
-                                    topic=topic,
-                                    created=created,
-                                    offset=message.offset(),
-                                    payload=message.value(),
-                                )
-                                notice.full_clean()
-                                notice.save()
-
-                                # Let the service know we have processed this message
-                                consumer.commit(message)
-                            except ValidationError as e:
-                                logger.error(
-                                    "A ValidationError occurred saving a new notice; assuming we have already seen this notice",
-                                    exc_info=e,
-                                )
-
-                                # Assume we've received the same offset twice, in which case
-                                # commit to acknowledge receipt
-                                consumer.commit(message)
-                            except Exception as e:
-                                logger.error(
-                                    "An error occurred saving a new notice:", exc_info=e
-                                )
+        logging.info(f"Keepalive wants me dead; closing {stream.name} Kafka consumer")
+        consumer.close()
