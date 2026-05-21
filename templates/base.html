@@ -1,5 +1,5 @@
 {% extends "skeleton.html" %}
-{% load gcnstatus %}
+{% load stream_status %}
 {% load static %}
 
 {% block body %}
@@ -33,7 +33,7 @@
                 </ul>
             </div>
                 <ul>
-                    <li>{% gcnstatus %}</li>
+                    <li>{% stream_status %}</li>
                     <li><form id="logout" method="post" action="{% url 'logout' %}"">{% csrf_token %}<input type="submit" value="Log out"></form></li>
                 </ul>
         </nav>

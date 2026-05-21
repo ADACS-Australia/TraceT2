@@ -256,7 +256,7 @@ span.vote.inherited {
     opacity: 0.3;
 }
 
-span.gcn-status {
+span.stream-status {
     height: 0.5rem;
     width: 0.5rem;
     margin-bottom: 0.05rem;
@@ -273,21 +273,27 @@ span.gcn-status {
     }
 }
 
-span.gcn-status.ok {
+span.stream-status.ok {
     background-color: var(--color-ok);
     color: var(--color-ok);  /* fallback */
     color: rgba(0, 0, 0, 0);
 }
 
-span.gcn-status.delayed {
+span.stream-status.delayed {
     background-color: var(--color-maybe);
     color: var(--color-maybe);  /* fallback */
     color: rgba(0, 0, 0, 0);
 }
 
-span.gcn-status.fail {
+span.stream-status.fail {
     background-color: var(--color-fail);
     color: var(--color-fail);  /* fallback */
+    color: rgba(0, 0, 0, 0);
+}
+
+span.stream-status.off {
+    background-color: var(--color-disabled);
+    color: var(--color-disabled);  /* fallback */
     color: rgba(0, 0, 0, 0);
 }
 

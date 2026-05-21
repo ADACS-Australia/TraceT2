@@ -35,9 +35,16 @@ class Home(View):
             .order_by("-created")
             .first()
         )
-        kafkaok = datetime.datetime.now(datetime.UTC) - cache.get(
-            "gcn_heartbeat_received", default=datetime.datetime(1900, 1, 1, tzinfo=datetime.UTC)
-        ) < datetime.timedelta(seconds=15)
+        laggy_stream = (
+            models.Stream.objects.filter(enabled=True).order_by("-last_polled").first()
+        )
+        if laggy_stream and laggy_stream.last_polled:
+            kafkaok = datetime.datetime.now(
+                datetime.UTC
+            ) - laggy_stream.last_polled < datetime.timedelta(seconds=15)
+        else:
+            kafkaok = False
+
         mostrecentnotice = models.Notice.objects.order_by("-created").first()
 
         return render(
@@ -266,7 +273,7 @@ class TriggerBase(View):
         ]
 
         # Validate each fieldset first to ensure `cleaned_data` exists
-        all(f.is_valid() for f in  telescopeformsets)
+        all(f.is_valid() for f in telescopeformsets)
 
         # Count the telescopes
         # (There must be a better way to do than simply counting all fields where DELETE=False)
@@ -362,7 +369,9 @@ class TriggerView(View):
         if not user.has_perm("tracet.view_trigger"):
             raise PermissionDenied("You do not have permission to view this trigger.")
 
-        paginator = Paginator(trigger.events.filter(disabled=False).order_by("-time"), 10)
+        paginator = Paginator(
+            trigger.events.filter(disabled=False).order_by("-time"), 10
+        )
 
         # If event_id is passed, set page number so that eventid displays
         events = None

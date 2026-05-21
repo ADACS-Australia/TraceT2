@@ -27,7 +27,7 @@
                     The server continues to listen for incoming notices, with the most recent being
                     <strong><a href="{{ mostrecentnotice.get_absolute_url }}">{{ mostrecentnotice.created | timesince }} ago</a></strong>.
                 {% else %}
-                    The server has <strong>stopped</strong> listening to incoming notices.
+                    <strong>There is a problem</strong> with at least one of the streams that are listening to incoming notices.
                 {% endif %}
             </p>
         {% endwith %}

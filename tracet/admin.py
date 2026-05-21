@@ -6,9 +6,17 @@ import django.contrib.auth as auth
 from . import models
 
 
+@admin.register(models.Stream)
+class Stream(admin.ModelAdmin):
+    list_display = ["name", "domain", "last_polled"]
+    fields = ["name", "domain", "config", "enabled", "last_polled"]
+    readonly_fields = ["last_polled"]
+
+
 @admin.register(models.Topic)
 class Topic(admin.ModelAdmin):
-    list_display = ["name", "type", "notice_count", "payload_filesize", "status"]
+    list_display = ["name", "stream", "type", "notice_count", "payload_filesize", "status"]
+    readonly_fields = ["status"]
 
     @admin.display(description="Payload size [MB]")
     def payload_filesize(self, obj):

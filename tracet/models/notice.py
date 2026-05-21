@@ -13,21 +13,6 @@ from django.utils import timezone
 logger = logging.getLogger(__name__)
 
 
-class Topic(models.Model):
-    class Format(models.TextChoices):
-        XML = ("xml", "XML")
-        JSON = ("json", "JSON")
-
-    name = models.CharField(max_length=500, unique=True)
-    type = models.CharField(
-        max_length=500, choices=Format, default="xml", verbose_name="Format"
-    )
-    status = models.CharField(max_length=500, default="—")
-
-    def __str__(self):
-        return f"{self.name} [{self.type}]"
-
-
 class Notice(models.Model):
     topic = models.ForeignKey("Topic", related_name="notices", on_delete=models.CASCADE)
     offset = models.IntegerField()
