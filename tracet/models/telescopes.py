@@ -100,6 +100,13 @@ class Telescope(models.Model):
     class RejectionException(BaseException):
         pass
 
+    OBSERVATORY = ""
+    CONFIGURATION = ""
+
+    trigger = models.OneToOneField(
+        "Trigger", related_name="%(class)s", on_delete=models.CASCADE
+    )
+
     def __init__(self, *args, **kwargs):
         self._logs = []
         return super().__init__(*args, **kwargs)
@@ -207,10 +214,6 @@ class MWABase(Telescope):
         T256 = "256T", "256 tiles"
 
     OBSERVATORY = "MWA"
-
-    trigger = models.OneToOneField(
-        "Trigger", related_name="%(class)s", on_delete=models.CASCADE
-    )
 
     projectid = models.CharField(max_length=500)
     secure_key = models.CharField(max_length=500)
@@ -624,9 +627,6 @@ class ATCA(Telescope):
     OBSERVATORY = "ATCA"
     CONFIGURATION = ""
 
-    trigger = models.OneToOneField(
-        "Trigger", related_name="%(class)s", on_delete=models.CASCADE
-    )
     projectid = models.CharField(max_length=500)
     http_username = models.CharField(max_length=500, verbose_name="HTTP Username")
     http_password = models.CharField(max_length=500, verbose_name="HTTP Password")
