@@ -47,9 +47,11 @@ INSTALLED_APPS = [
     "django.contrib.messages",
     "django.contrib.staticfiles",
     "nested_admin",
-    "tracet.apps.TraceTConfig",
+    "tracet",
     "django_filters",
     "rules",
+    "telescopes.atca",
+    "telescopes.mwa",
 ]
 
 MIDDLEWARE = [

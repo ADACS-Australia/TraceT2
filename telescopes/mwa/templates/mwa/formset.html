@@ -1,0 +1,17 @@
+{{ formset.management_form }}
+
+{% for form in formset %}
+    <fieldset id="{{ form.shortname }}-telescope" class="telescope" data-formset-prefix="{{ formset.prefix }}">
+        <legend>{{ form.name }}</legend>
+        {{ form }}
+    </fieldset>
+{% endfor %}
+
+{% with form=formset.empty_form %}
+    <template id="{{ form.shortname }}-telescope-template">
+        <fieldset id="{{ form.shortname }}-telescope" class="telescope" data-formset-prefix="{{ formset.prefix }}">
+            <legend>{{ form.name }}</legend>
+            {{ form }}
+        </fieldset>
+    </template>
+{% endwith %}

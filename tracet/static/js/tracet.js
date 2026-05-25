@@ -28,7 +28,7 @@ function attachFieldsetHandler(link) {
         const prefix = parseInt(total.value)
         total.value = prefix + 1;
 
-        newempty.querySelectorAll("a, label, input, select, textarea, template")
+        newempty.querySelectorAll("a, label, input, select, textarea, template, tbody")
             .forEach(node => {
                 Array.from(node.attributes)
                     .filter(a => a.specified)
@@ -125,10 +125,14 @@ window.addEventListener("load", function () {
 
             telescope = document.getElementById(select.value);
 
-            telescope.querySelectorAll("a, label, input, select, textarea, template")
+            telescope.querySelectorAll("a, label, input, select, textarea, template, tbody")
                 .forEach(node => {
                     Array.from(node.attributes).forEach(a => a.value = a.value.replace("__prefix__", 0));
                 });
+
+            // Since this is a new node, we need to attach handlers that were missed at page load.
+            telescope.querySelectorAll("a.fieldset-add").forEach(attachFieldsetHandler);
+            telescope.querySelectorAll(".deleteable").forEach(attachDeleteHandler);
         }
 
         telescope.querySelector(".field-DELETE").classList.add("hidden");

@@ -87,7 +87,7 @@ class Trigger(models.Model):
             *self.equalityconditions.all(),
         ]
 
-    def get_telescope(self):
+    def get_telescope(self) -> Telescope | None:
         try:
             return [
                 getattr(self, attr)

@@ -72,125 +72,17 @@
         <label for="telescope-selector">Telescope configuration:</label>
         <select>
             <option value="">&mdash;</option>
-            <option value="mwa-telescope">MWA Correlator</option>
-            <option value="mwagw-telescope">MWA Gravitational Wave</option>
-            <option value="mwavcs-telescope">MWA VCS</option>
-            <option value="atca-telescope">ATCA</option>
+            {% for shortname, name, _ in telescopes %}
+                <option value="{{ shortname }}-telescope">{{ name }}</option>
+            {% endfor %}
         </select>
         <div class="helptext">Choose a downstream telescope configuration.</div>
     </div>
 
     <div id="telescopes">
-        {{ mwaformset.management_form }}
-
-        {% for form in mwaformset %}
-            {% partialdef mwa inline %}
-                <fieldset id="mwa-telescope" class="telescope" data-formset-prefix="{{ mwaformset.prefix }}">
-                    <legend>MWA Correlator</legend>
-                    {{ form }}
-                </fieldset>
-            {% endpartialdef %}
+        {% for _, _, formset in telescopes %}
+            {{ formset }}
         {% endfor %}
-
-        {% with form=mwaformset.empty_form %}
-            <template id="mwa-telescope-template">{% partial mwa %}</template>
-        {% endwith %}
-
-        {{ mwagwformset.management_form }}
-
-        {% for form in mwagwformset %}
-            {% partialdef mwagw inline %}
-                <fieldset id="mwagw-telescope" class="telescope" data-formset-prefix="{{ mwagwformset.prefix }}">
-                    <legend>MWA GW</legend>
-                    {{ form }}
-                </fieldset>
-            {% endpartialdef %}
-        {% endfor %}
-
-        {% with form=mwagwformset.empty_form %}
-            <template id="mwagw-telescope-template">{% partial mwagw %}</template>
-        {% endwith %}
-
-        {{ mwavcsformset.management_form }}
-
-        {% for form in mwavcsformset %}
-            {% partialdef mwavcs inline %}
-                <fieldset id="mwavcs-telescope" class="telescope" data-formset-prefix="{{ mwavcsformset.prefix }}">
-                    <legend>MWA VCS</legend>
-                    {{ form }}
-                </fieldset>
-            {% endpartialdef %}
-        {% endfor %}
-
-        {% with form=mwavcsformset.empty_form %}
-            <template id="mwavcs-telescope-template">{% partial mwavcs %}</template>
-        {% endwith %}
-
-        {{ atcaformset.management_form }}
-
-        {% for form in atcaformset %}
-            {% partialdef atca inline %}
-                <fieldset id="atca-telescope" class="telescope" data-formset-prefix="{{ atcaformset.prefix }}">
-                    <legend>ATCA</legend>
-                    {{ form }}
-
-                    {{ form.nested.management_form }}
-
-                    {% for form in form.nested %}
-                        {% include "tracet/forms/errors.html" with form=form %}
-                    {% endfor %}
-
-                    <table>
-                        <thead>
-                            <tr>
-                            {% for field in form.nested.empty_form %}
-                                {% if not field.is_hidden %}
-                                <th>{{ field.label }}</th>
-                                {% endif %}
-                            {% endfor %}
-                            </tr>
-                        </thead>
-                        <tbody id="{{ form.nested.prefix }}-PARENT">
-                            {% for form in form.nested %}
-                                {% partialdef atcaband inline %}
-                                    <tr class="atcaband deleteable transition-opacity">
-                                        {% for field in form %}
-                                            {% if field.is_hidden %}
-                                                {{ field }}
-                                            {% else %}
-                                                <td class="field-{{ field.name }}">{{ field }}</td>
-                                            {% endif %}
-                                        {% endfor %}
-                                    </tr>
-                                {% endpartialdef %}
-                            {% endfor %}
-                        </tbody>
-                    </table>
-
-                    <ul class="help-text">
-                        {% for field in form.nested.empty_form %}
-                        {% if field.help_text %}
-                            <li><strong>{{field.label }}</strong> {{ field.help_text }}</li>
-                        {% endif %}
-                        {% endfor %}
-                    </ul>
-
-                    <template id="{{ form.nested.prefix }}-template">
-                        {% with form=form.nested.empty_form %}
-                            {% partial atcaband %}
-                        {% endwith %}
-                    </template>
-
-                    <ul>
-                        <li><a class="fieldset-add" template="{{ form.nested.prefix }}-template" parentnode="{{form.nested.prefix}}-PARENT" counter="id_{{ form.nested.prefix }}-TOTAL_FORMS">Add a band configuration</a></li>
-                    </ul>
-                </fieldset>
-            {% endpartialdef atca %}
-        {% endfor %}
-
-        {% with form=atcaformset.empty_form %}
-            <template id="atca-telescope-template">{% partial atca %}</template>
-        {% endwith %}
     </div>
 
     <div class="submits">

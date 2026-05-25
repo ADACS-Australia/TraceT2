@@ -1,4 +1,5 @@
 import datetime
+import itertools
 import logging
 
 from django.core.cache import cache
@@ -6,7 +7,7 @@ from django.core.exceptions import PermissionDenied
 from django.core.paginator import EmptyPage, Paginator
 from django.contrib import messages
 from django.contrib.auth import get_user
-from django.forms import formset_factory, modelformset_factory, inlineformset_factory
+from django.forms import modelformset_factory, inlineformset_factory, BaseInlineFormSet
 from django.shortcuts import (
     get_object_or_404,
     get_list_or_404,
@@ -20,6 +21,7 @@ from django.utils import timezone
 from django.views import View
 
 from . import models, forms, filters
+from tracet.telescope_registry import telescope_registry
 
 
 logger = logging.getLogger(__name__)
@@ -35,7 +37,11 @@ class Home(View):
             .order_by("-created")
             .first()
         )
-        if laggy_stream := models.Stream.objects.filter(enabled=True).order_by("last_polled").first():
+        if (
+            laggy_stream := models.Stream.objects.filter(enabled=True)
+            .order_by("last_polled")
+            .first()
+        ):
             kafkaok = datetime.datetime.now(
                 datetime.UTC
             ) - laggy_stream.last_polled < datetime.timedelta(seconds=15)
@@ -222,56 +228,32 @@ class TriggerBase(View):
                 form=forms.EqualityCondition,
                 extra=0,
             )(post, instance=self.trigger),
-            mwaformset=inlineformset_factory(
-                models.Trigger,
-                models.MWACorrelator,
-                form=forms.MWACorrelator,
-                extra=0,
-                max_num=1,
-            )(post, instance=self.trigger),
-            mwagwformset=inlineformset_factory(
-                models.Trigger,
-                models.MWAGW,
-                form=forms.MWAGW,
-                extra=0,
-                max_num=1,
-            )(post, instance=self.trigger),
-            mwavcsformset=inlineformset_factory(
-                models.Trigger,
-                models.MWAVCS,
-                form=forms.MWAVCS,
-                extra=0,
-                max_num=1,
-            )(post, instance=self.trigger),
-            atcaformset=inlineformset_factory(
-                models.Trigger,
-                models.ATCA,
-                form=forms.ATCA,
-                formset=forms.BaseATCAWithBandsFormset,
-                extra=0,
-                max_num=1,
-            )(post, instance=self.trigger),
         )
+
+        # Load all registered telescope formsets
+        self.telescopes = [
+            (shortname, name, formset(post, instance=self.trigger))
+            for (shortname, name, _, formset) in telescope_registry.get().values()
+        ]
 
     def get(self, request, id=None):
         return render(
             request,
             "tracet/trigger/edit.html",
-            {"trigger": self.trigger, "title": self.title, "actionurl": self.actionurl}
+            {
+                "trigger": self.trigger,
+                "title": self.title,
+                "actionurl": self.actionurl,
+                "telescopes": self.telescopes,
+            }
             | self.forms,
         )
 
     def post(self, request, id=None):
-        # Enforce limit of one telescope configuration per trigger
-        telescopeformsets = [
-            self.forms["mwaformset"],
-            self.forms["mwagwformset"],
-            self.forms["mwavcsformset"],
-            self.forms["atcaformset"],
-        ]
-
-        # Validate each fieldset first to ensure `cleaned_data` exists
-        all(f.is_valid() for f in telescopeformsets)
+        # We want to limit exactly no more than 1 configured telescope per trigger
+        # Validate each telescope fieldset first to ensure `cleaned_data` exists
+        telescopeformsets = {shortname: f for (shortname, _, f) in self.telescopes}
+        all(f.is_valid() for f in telescopeformsets.values())
 
         # Count the telescopes
         # (There must be a better way to do than simply counting all fields where DELETE=False)
@@ -282,7 +264,7 @@ class TriggerBase(View):
                     and "DELETE" in f.cleaned_data
                     and f.cleaned_data["DELETE"] is False
                 )
-                for formset in telescopeformsets
+                for formset in telescopeformsets.values()
                 for f in formset
             ]
         )
@@ -293,10 +275,15 @@ class TriggerBase(View):
                 None, "A maximum of one telescope may be configured per trigger."
             )
 
-        if all(f.is_valid() for f in self.forms.values()):
+        if all(
+            f.is_valid()
+            for f in itertools.chain(self.forms.values(), telescopeformsets.values())
+        ):
             # Save the parent trigger first
             self.trigger = self.forms["triggerform"].save()
-            for name, form in self.forms.items():
+            for name, form in itertools.chain(
+                self.forms.items(), telescopeformsets.items()
+            ):
                 # Then for save each child element, careful to assign the instance in
                 # the case that trigger is new.
                 if name != "triggerform":
@@ -316,6 +303,7 @@ class TriggerBase(View):
                     "trigger": self.trigger,
                     "title": self.title,
                     "actionurl": self.actionurl,
+                    "telescopes": self.telescopes,
                 }
                 | self.forms,
             )

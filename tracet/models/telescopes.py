@@ -20,6 +20,7 @@ from django.conf import settings
 from django.core.exceptions import ValidationError
 from django.core.validators import URLValidator
 from django.db import models
+from django.template.loader import render_to_string
 from django.urls import reverse
 from django.utils import timezone
 from django.utils.safestring import mark_safe
@@ -102,6 +103,7 @@ class Telescope(models.Model):
 
     OBSERVATORY = ""
     CONFIGURATION = ""
+    SUMMARY_TEMPLATE = ""
 
     trigger = models.OneToOneField(
         "Trigger", related_name="%(class)s", on_delete=models.CASCADE
@@ -200,6 +202,9 @@ class Telescope(models.Model):
             )
             raise Telescope.OverrideException()
 
+    def summary(self) -> str:
+        return render_to_string(self.SUMMARY_TEMPLATE, {"telescope": self})
+
 
 class MWABase(Telescope):
     class Meta:
@@ -214,6 +219,7 @@ class MWABase(Telescope):
         T256 = "256T", "256 tiles"
 
     OBSERVATORY = "MWA"
+    SUMMARY_TEMPLATE = "mwa/mwabase-summary.html"
 
     projectid = models.CharField(max_length=500)
     secure_key = models.CharField(max_length=500)
@@ -412,6 +418,7 @@ class MWAVCS(MWABase):
 
 class MWAGW(MWABase):
     CONFIGURATION = "GW"
+    SUMMARY_TEMPLATE = "mwa/mwagw-summary.html"
 
     class SweetSpots:
         MWA = EarthLocation.from_geodetic(
@@ -626,6 +633,7 @@ class MWAGW(MWABase):
 class ATCA(Telescope):
     OBSERVATORY = "ATCA"
     CONFIGURATION = ""
+    SUMMARY_TEMPLATE = "atca/summary.html"
 
     projectid = models.CharField(max_length=500)
     http_username = models.CharField(max_length=500, verbose_name="HTTP Username")

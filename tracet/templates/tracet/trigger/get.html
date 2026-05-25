@@ -2,7 +2,6 @@
 
 {% load iso8601 %}
 {% load rules %}
-{% load telescopesummary %}
 {% load votetotext %}
 
 {% block title %}Trigger {{ trigger.id }}{% endblock %}
@@ -49,7 +48,7 @@
 
 <h2>Telescope</h2>
 
-{{ trigger.get_telescope | telescopesummary }}
+{{ trigger.get_telescope.summary }}
 
 <hr>
 
