@@ -13,11 +13,6 @@ from django.utils import timezone
 logger = logging.getLogger(__name__)
 
 
-class Observatory(models.TextChoices):
-    ATCA = "atca", "ATCA"
-    MWA = "mwa", "MWA"
-
-
 class Observation(models.Model):
     class Status(models.TextChoices):
         API_OK = "api_ok", "OK"
@@ -35,7 +30,7 @@ class Observation(models.Model):
     )
     created = models.DateTimeField(default=timezone.now)
     finish = models.DateTimeField(null=True)
-    observatory = models.CharField(choices=Observatory, max_length=500)
+    observatory = models.CharField(max_length=500)
     configuration = models.CharField(blank=True, max_length=500)
     _pointings = models.JSONField(default=list)
     priority = models.IntegerField()
