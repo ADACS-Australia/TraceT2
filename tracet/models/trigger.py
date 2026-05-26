@@ -60,7 +60,7 @@ class Trigger(models.Model):
     def get_absolute_url(self):
         return reverse("triggerview", args=[self.id])
 
-    def get_or_create_event(self, notice: "Notice") -> Optional["Event"]:
+    def get_or_create_event(self, notice: Notice) -> Optional["Event"]:
         # Check if we are listening to this particular topic
         if not self.topics.filter(id=notice.topic.id).exists():
             return None
@@ -184,38 +184,3 @@ class Event(models.Model):
                 )
 
         self.save()
-
-    def get_last_interesting_decision(self) -> Optional["Decision"]:
-        """
-        This method is used in providing front page summary of each event.
-
-        In order of precedence:
-        1. Return the most recent decision that triggered a successful observation
-        2. Return the most recent decision that triggered an unsuccessful observation
-        3. Return most recent decision
-        """
-        observation = (
-            Observation.objects.exclude(decision__source=Decision.Source.SIMULATED)
-            .filter(decision__event__id=self.id, status=Observation.Status.API_OK)
-            .order_by("-created")
-            .first()
-        )
-
-        if observation is not None:
-            return observation.decision
-
-        observation = (
-            Observation.objects.exclude(decision__source=Decision.Source.SIMULATED)
-            .filter(decision__event__id=self.id)
-            .order_by("-created")
-            .first()
-        )
-
-        if observation is not None:
-            return observation.decision
-
-        return (
-            self.decisions.exclude(source=Decision.Source.SIMULATED)
-            .order_by("-created")
-            .first()
-        )
