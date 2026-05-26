@@ -6,7 +6,7 @@ class MwaConfig(AppConfig):
 
     def ready(self):
         from telescopes.mwa.forms import MWACorrelatorFormset, MWAGWFormset, MWAVCSFormset
-        from tracet.models import MWACorrelator, MWAGW, MWAVCS
+        from telescopes.mwa.models import MWACorrelator, MWAGW, MWAVCS
         from tracet.telescope_registry import telescope_registry
 
         telescope_registry.register("mwacorrelator", "MWA Correlator", MWACorrelator, MWACorrelatorFormset)

@@ -7,7 +7,7 @@ from django.utils.html import escape
 from django.utils.safestring import mark_safe
 from django.utils import timezone
 
-from tracet.models.fields import JXPathField
+from tracet.fields import JXPathField
 from tracet.utils import truthy
 
 

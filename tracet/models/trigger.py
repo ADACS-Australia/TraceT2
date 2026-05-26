@@ -13,8 +13,8 @@ from django.urls import reverse
 from django.utils import timezone
 
 from tracet.models.conditions import Decision, ExpirationCondition
-from tracet.models.fields import JXPathField
-from tracet.models.telescopes import Observation, Telescope
+from tracet.fields import JXPathField
+from tracet.models.telescopes import Observation, AbstractTelescope
 
 logger = logging.getLogger(__name__)
 
@@ -87,13 +87,13 @@ class Trigger(models.Model):
             *self.equalityconditions.all(),
         ]
 
-    def get_telescope(self) -> Telescope | None:
+    def get_telescope(self) -> AbstractTelescope | None:
         try:
             return [
                 getattr(self, attr)
                 for attr in dir(self)
                 if hasattr(self, attr)
-                and issubclass(type(getattr(self, attr)), Telescope)
+                and issubclass(type(getattr(self, attr)), AbstractTelescope)
             ][0]
         except IndexError:
             return None

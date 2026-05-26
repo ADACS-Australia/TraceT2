@@ -1,8 +1,9 @@
 import copy
 from collections import namedtuple
 
-import django.db.models
 import django.forms
+
+from tracet.models import AbstractTelescope
 
 
 class TelescopeRegistry:
@@ -17,7 +18,7 @@ class TelescopeRegistry:
         self,
         shortname: str,
         name: str,
-        model: type[django.db.models.Model],
+        model: type[AbstractTelescope],
         formset: type[django.forms.BaseInlineFormSet],
     ):
         self.registry[shortname] = TelescopeRegistry.TelescopeConfig(

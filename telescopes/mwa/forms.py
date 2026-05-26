@@ -1,6 +1,7 @@
 import django.forms as forms
 
-import tracet.models as models
+import telescopes.mwa.models as models
+from tracet.models import Trigger
 
 
 class MWABaseInlineFormset(forms.BaseInlineFormSet):
@@ -38,7 +39,7 @@ MWACorrelator.Meta.error_messages = {
 
 
 MWACorrelatorFormset: type[forms.BaseInlineFormSet] = forms.inlineformset_factory(
-    models.Trigger,
+    Trigger,
     models.MWACorrelator,
     form=MWACorrelator,
     formset=MWABaseInlineFormset,
@@ -78,7 +79,7 @@ MWAVCS.Meta.error_messages = {
 
 
 MWAVCSFormset: type[forms.BaseInlineFormSet] = forms.inlineformset_factory(
-    models.Trigger,
+    Trigger,
     models.MWAVCS,
     form=MWAVCS,
     formset=MWABaseInlineFormset,
@@ -116,7 +117,7 @@ MWAGW.Meta.error_messages = {
 
 
 MWAGWFormset: type[forms.BaseInlineFormSet] = forms.inlineformset_factory(
-    models.Trigger,
+    Trigger,
     models.MWAGW,
     form=MWAGW,
     formset=MWABaseInlineFormset,

@@ -1,6 +1,7 @@
 import django.forms as forms
 
-import tracet.models as models
+import telescopes.atca.models as models
+from tracet.models import Trigger
 
 
 class ATCA(forms.ModelForm):
@@ -166,7 +167,7 @@ class BaseATCAWithBandsFormset(forms.BaseInlineFormSet):
 
 
 ATCAFormset: type[forms.BaseInlineFormSet] = forms.inlineformset_factory(
-    models.Trigger,
+    Trigger,
     models.ATCA,
     form=ATCA,
     formset=BaseATCAWithBandsFormset,
