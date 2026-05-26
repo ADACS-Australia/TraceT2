@@ -1,5 +1,5 @@
 [Unit]
-Description=TraceT (GCNListen)
+Description=TraceT (Listen)
 After=tracet.service
 WantedBy=tracet.service
 PartOf=tracet.service
@@ -7,8 +7,8 @@ PartOf=tracet.service
 [Service]
 Type=simple
 WorkingDirectory=/home/debian/TraceT/deploy
-ExecStart=/usr/bin/podman compose --profile prod up --remove-orphans --exit-code-from gcnlisten gcnlisten
-ExecStopPost=/usr/bin/podman compose --profile prod stop gcnlisten
+ExecStart=/usr/bin/podman compose --profile prod up --remove-orphans --exit-code-from listen listen
+ExecStopPost=/usr/bin/podman compose --profile prod stop list
 Restart=on-failure
 RestartSec=5
 

@@ -41,7 +41,7 @@ class Stream(models.Model):
         config.update(
             {
                 "bootstrap.servers": self.domain,
-                "group.id": os.getenv("GCN_GROUP_ID"),
+                "group.id": os.getenv("KAFKA_GROUP_ID"),
                 "ssl.ca.location": certifi.where(),
                 "https.ca.location": certifi.where(),
                 "auto.offset.reset": "earliest",

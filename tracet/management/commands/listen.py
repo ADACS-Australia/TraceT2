@@ -21,8 +21,8 @@ class Command(BaseCommand):
     help = "Connect to enabled streams and process incoming notices"
 
     def handle(self, *args, **kwargs):
-        if not os.getenv("GCN_GROUP_ID"):
-            raise Exception("No GCN_GROUP_ID found in environment variables")
+        if not os.getenv("KAFKA_GROUP_ID"):
+            raise Exception("No KAFKA_GROUP_ID found in environment variables")
 
         # If the `reset_streams` flag has been set to True, we assume something has changed
         # with regards to:

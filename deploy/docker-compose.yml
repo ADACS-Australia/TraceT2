@@ -23,12 +23,12 @@ services:
       - ..:/tracet
       - /tracet/.venv
 
-  gcnlisten:
+  listen:
     profiles: ["prod", "dev"]
     build:
       context: ..
       dockerfile: deploy/Dockerfile
-    command: 'uv run ./manage.py listengcn'
+    command: 'uv run ./manage.py listen'
     env_file: "secrets.env"
     volumes:
       - ..:/tracet

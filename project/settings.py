@@ -198,9 +198,9 @@ LOGGING = {
             "filename": BASE_DIR / "logs/log.log",
             "formatter": "verbose",
         },
-        "gcnlisten": {
+        "listen": {
             "class": "logging.FileHandler",
-            "filename": BASE_DIR / "logs/gcnlisten.log",
+            "filename": BASE_DIR / "logs/listen.log",
             "formatter": "verbose",
         },
     },
@@ -213,8 +213,8 @@ LOGGING = {
             "handlers": ["console", "file"],
             "level": "INFO",
         },
-        "tracet.management.commands.listengcn": {
-            "handlers": ["console", "gcnlisten"],
+        "tracet.management.commands.listen": {
+            "handlers": ["console", "listen"],
             "level": "INFO",
             "propagate": False,
         }
