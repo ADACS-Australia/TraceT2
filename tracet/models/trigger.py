@@ -14,7 +14,9 @@ from django.utils import timezone
 
 from tracet.models.conditions import Decision, ExpirationCondition
 from tracet.fields import JXPathField
-from tracet.models.telescopes import Observation, AbstractTelescope
+from tracet.models.observation import Observation
+from tracet.models.notice import Notice
+from tracet.models.telescope import AbstractTelescope
 
 logger = logging.getLogger(__name__)
 

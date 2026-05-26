@@ -6,60 +6,13 @@ from astropy.coordinates import SkyCoord
 
 from django.db import models
 from django.template.loader import render_to_string
-from django.urls import reverse
 from django.utils import timezone
+
+import tracet.models
+from tracet.models.observation import Observation
 
 
 logger = logging.getLogger(__name__)
-
-
-class Observation(models.Model):
-    class Status(models.TextChoices):
-        API_OK = "api_ok", "OK"
-        API_FAILURE = "api_failure", "Failure"
-        CLASH = "clash", "Clashing observation"
-        REQUEST_FAILURE = "request_failure", "Could not make API request"
-        DATA_FAILURE = "data_failure", "Unable to prepare request"
-        UNKNOWN_FAILURE = "unknown_failure", "An unexpected failure occurred"
-
-    decision = models.ForeignKey(
-        "Decision",
-        null=True,
-        related_name="observations",
-        on_delete=models.CASCADE,
-    )
-    created = models.DateTimeField(default=timezone.now)
-    finish = models.DateTimeField(null=True)
-    observatory = models.CharField(max_length=500)
-    configuration = models.CharField(blank=True, max_length=500)
-    _pointings = models.JSONField(default=list)
-    priority = models.IntegerField()
-    status = models.CharField(choices=Status)
-    istest = models.BooleanField()
-    log = models.TextField()
-
-    def __bool__(self):
-        return self.success and not self.istest
-
-    def get_absolute_url(self):
-        return reverse("observationview", args=[self.id])
-
-    def get_istest_display(self):
-        return "Test" if self.istest else "Active"
-
-    def in_progress(self):
-        if self.status == Observation.Status.API_OK and self.created and self.finish:
-            return self.created <= timezone.now() <= self.finish
-        else:
-            return False
-
-    @property
-    def pointings(self):
-        return [SkyCoord(c[0], c[1], unit=("deg", "deg")) for c in self._pointings]
-
-    @pointings.setter
-    def pointings(self, coords):
-        self._pointings = [(c.ra.deg, c.dec.deg) for c in coords]
 
 
 class AbstractTelescope(models.Model):
@@ -153,13 +106,13 @@ class AbstractTelescope(models.Model):
         observation.log = self.get_log()
         return observation.save()
 
-    def get_pointings(self, event: "Event") -> list[SkyCoord]:
+    def get_pointings(self, event: tracet.models.Event) -> list[SkyCoord]:
         raise NotImplementedError
 
-    def prepare_request(self, observation: Observation):
+    def prepare_request(self, observation: Observation) -> None:
         raise NotImplementedError()
 
-    def make_request(self, observation: Observation):
+    def make_request(self, observation: Observation) -> None:
         raise NotImplementedError()
 
     def repoint(
@@ -169,7 +122,7 @@ class AbstractTelescope(models.Model):
 
     def check_override(
         self, current_observation: Observation, proposed_observation: Observation
-    ):
+    ) -> None:
         # Default implementation
         if proposed_observation.priority > current_observation.priority:
             self.log(
