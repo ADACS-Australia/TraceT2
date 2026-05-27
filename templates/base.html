@@ -38,7 +38,7 @@
             </div>
                 <ul>
                     <li>{% stream_status %}</li>
-                    <li><form id="logout" method="post" action="{% url 'logout' %}"">{% csrf_token %}<input type="submit" value="Log out"></form></li>
+                    <li><form id="logout" method="post" action="{% url 'logout' %}">{% csrf_token %}<input type="submit" value="Log out"></form></li>
                 </ul>
         </nav>
     </header>
