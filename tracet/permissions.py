@@ -5,12 +5,6 @@ import rules
 def is_trigger_owner(user, trigger):
     return trigger.user == user
 
-
-@rules.predicate
-def isstaff(user):
-    return user.is_staff
-
-
 # Module level permission of TraceT required for admin
 rules.add_perm("tracet", rules.is_group_member("admin"))
 
@@ -33,6 +27,13 @@ rules.add_perm(
 rules.add_perm(
     "tracet.retrigger_trigger", rules.is_group_member("admin") | is_trigger_owner
 )
+
+
+# Allow adding/deleting Streams
+rules.add_perm("tracet.view_stream", rules.is_group_member("admin"))
+rules.add_perm("tracet.add_stream", rules.is_group_member("admin"))
+rules.add_perm("tracet.change_stream", rules.is_group_member("admin"))
+rules.add_perm("tracet.delete_stream", rules.is_group_member("admin"))
 
 # Allow adding/deleting Topics
 rules.add_perm("tracet.view_topic", rules.is_group_member("admin"))

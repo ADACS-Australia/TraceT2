@@ -7,5 +7,5 @@ class TraceTConfig(AppConfig):
     name = 'tracet'
 
     def ready(self):
-        from . import rules
+        from . import permissions
         from . import signals
