@@ -32,13 +32,13 @@ It is also possible to manually _retrigger_ a specific event attached to a trigg
 
 ## Notices
 
-Notices are broadcast by Nasa's [General Coordinates Network](https://gcn.nasa.gov/) (GCN) and are sorted by <em>topics.</em>
+Notices are broadcast by Kafka message brokers, and the messages from a broker are further sorted by <em>topics</em>. The archetypal broker is Nasa's [General Coordinates Network](https://gcn.nasa.gov/) (GCN).
 
-Each topic pertains to a particular upstream early-detection instrument and will broadcast notices using a fix payload format. TRACE-T is compatible with XML and JSON formats.
+Typically, each topic pertains to a particular upstream early-detection instrument. For a given topic, notices are broadcast using a fixed format of some kind. TRACE-T is compatible with two of these: the XML and JSON formats.
 
 TRACE-T has a background service that listens for the configured set of topics and records any new notices that are broadcast.
 
-> **Hint:** The status of the GCN Listen background service is reported at the top right of all pages (e.g. "Stream OK" ). This status depends on TRACE-T having recorded a "heartbeat" notice no older than at most 5 seconds.
+> **Hint:** The status of the background listen service is reported at the top right of all pages (e.g. "Stream OK" ). This status depends on TRACE-T having successfully polled each of the configured streams at least once in the last 5 seconds.
 
 In addition to their payload, notices have both a `created` and `received` time. The `created` time records the time reported by the Kafka message broker, whilst `received` is the time TRACE-T downloads and saves the notice. Ideally, the time delay between a notice being created and received should be on the order of seconds.
 
@@ -216,13 +216,57 @@ A user can be asigned groups from within their respective user edit form.
 
 > **Note:** To access pages at `/admin`, a user must be assigned as `staff`, which can be enabled on the user edit form. To perform backend admin tasks, a user must be _both_ `staff` and a member of `admin`.
 
-### GCN Topic management
+### Stream management
 
-TRACE-T can subscribe (and unsubscribe) to GCN topics. Once subscribed to a topic, TRACE-T will begin listening and storing new notices on that topic.
+In TraceT, upstream Kafka message brokers are called _streams_. TraceT can be configured to listen to multiple streams.
+
+### Viewing existing streams
+
+Existing streams can be viewed at `/admin/tracet/stream/`. This overview will indicate:
+
+* Whether a stream is enabled
+* The last time the stream was successfully polled
+
+The `Last Polled` time is useful when identifying is misconfigured or otherwise lagging.
+
+#### Adding a stream
+
+TraceT can be configured to listen to one or more _streams_, each of which configures a connection to an upstream Kafka message broker.
+
+To add a new stream go to `/admin/tracet/stream/create`. You will need to enter:
+
+* A short descriptive name for this stream: this name will be used throughout the UI to identify this stream.
+* The kafka domain: one or more domains that TraceT will connect to when attempting to join this stream. This is of the form `DOMAIN1:PORT1`, where port will default to 9092 if not provided. For fault tolerance, additional domains can be provided as a comma-separated list, e.g.: `DOMAIN1:PORT1,DOMAIN2:PORT2`, etc. This value corresponds to Kafka's `bootstrap.servers` configuration parameter.
+* Configuration options for this stream. Each Kafka stream may require one or more additional configuration parameters, e.g. user names, API tokens, security configuration, etc. This is provided here as JSON dictionary that maps Kafka configuration parameters to values.
+
+A full list of configuration parameters is available at [https://docs.confluent.io/platform/current/installation/configuration/consumer-configs.html](https://docs.confluent.io/platform/current/installation/configuration/consumer-configs.html)
+
+As an example, a GCN stream can be configured by setting the domain to `kafka.gcn.nasa.gov` and the configuration as:
+
+```JSON
+{
+    "sasl.mechanism": "OAUTHBEARER",
+    "sasl.oauthbearer.client.id": "YOUR_CLIENT_ID",
+    "sasl.oauthbearer.client.secret": "YOUR_CLIENT__SECRET",
+    "sasl.oauthbearer.method": "oidc",
+    "sasl.oauthbearer.token.endpoint.url": "https://auth.gcn.nasa.gov/oauth2/token",
+    "security.protocol": "sasl_ssl"
+}
+```
+
+Configuration parameters vary between Kafka providers. To learn about the configuration parameters required for a particular service you will need to consult their documentation, examine their module code if provided, or contact the provider directly.
+
+Note that TraceT will always add a `GROUP_ID` value to this list that is derived from the server environment variable `KAFKA_GROUP_ID`.
+
+> **Note:** When a stream configuration is (re)saved, TraceT will perform basic validation of the configuration and attempt to connect to the broker. If this fails, the TraceT will refuse to save the form.
+
+### Topic management
+
+TRACE-T can subscribe (and unsubscribe) to topics associated with a particular stream. Once subscribed to a topic, TRACE-T will begin listening and storing new notices on that topic.
 
 #### Viewing existing topics
 
-You can an overview existing GCN topics at `/admin/tracet/gcnstream`.
+You can an overview existing topics at `/admin/tracet/topic`.
 
 This page provides statistics for each topic including:
 
@@ -238,11 +282,9 @@ Additionally, the `status` field indicates any errors with a topic. When a new t
 To add a new topic:
 
 1. Go to `/admin/tracet/topic` and select "Add topic".
-2. Enter both the name of the topic (e.g. `gcn.classic.voevent.FERMI_GBM_FLT_POS`) and select its format (`JSON` or `XML`). Hint: To discover the available topics, proceed through the wizard at [https://gcn.nasa.gov/quickstart](https://gcn.nasa.gov/quickstart); the topic names will be available in the code snippets.
+2. Enter both the name of the topic (e.g. `gcn.classic.voevent.FERMI_GBM_FLT_POS`) and select its format (`JSON` or `XML`). You will need to consult the documentation of the Kafka broker to discover available topics and their payload format. Hint: To discover the available topics for GCN, proceed through the wizard at [https://gcn.nasa.gov/quickstart](https://gcn.nasa.gov/quickstart); the topic names will be available in the code snippets.
 
-> **Note:** The background listener may take up to 10 minutes to detect topic changes.
-
-Once added, you can view the full list of topics at `/admin/tracet/gcnstream`. Monitor the `status` field for any errors to ensure the topic is correctly configured.
+Once added, you can view the full list of topics at `/admin/tracet/topic`. Monitor the `status` field for any errors to ensure the topic is correctly configured.
 
 #### Deleting a topic
 
@@ -263,7 +305,7 @@ Use Git to clone TRACE-T into a directory.
 When TRACE-T is run, the following files and directories will be modified:
 
 * `db.sqlite3`, `db.sqlite3-wal`, `db.sqlite3-shm`: TRACE-T uses a filesystem database. These files are critical to the operation of TRACE-T: do not move, modify, or delete these files.
-* `logs/`: Two log files will be created in this directory one for each of Django and the background GCN listener.
+* `logs/`: Two log files will be created in this directory one for each of Django and the background Kafka listener.
 * `static/`: On each restart, this folder will be cleared and repopulated with static files that are used throughout Django. Production only.
 
 ### Required services
@@ -272,7 +314,7 @@ A production installation of TRACE-T is comprised of 3 services:
 
 * A `gunicorn` instance that runs Django itself.
 * A `caddy` webserver instance that faces the internet. This instance serves static files directly, and otherwise proxies traffic to the `gunicorn` instance to be served by Django.
-* A `listengcn` instance that listens for notices from Nasa's GCN network.
+* A `listen` instance that listens for notices from each of the configured Kafka streams.
 
 By default, TRACE-T uses `sqlite3` for its database. This is a file-based database and doesn't require a separate service.
 
@@ -314,7 +356,7 @@ systemctl --user start TRACE-T
 
 TRACE-T may take some time to start on its first load as it will download and build the containers as well as run outstanding Django migrations. One can then check the status of the services by running `systemctl --user status 'TRACE-T*'`.
 
-In addition to the parent unit, `TRACE-T`, there are the child units `TRACE-T-caddy`, `TRACE-T-gunicorn`, and `TRACE-T-gcnlisten`. Whilst it is normally sufficient to start/stop/restart the parent unit, occasionally it may be necessary to start/stop/restart a child unit.
+In addition to the parent unit, `TRACE-T`, there are the child units `TRACE-T-caddy`, `TRACE-T-gunicorn`, and `TRACE-T-listen`. Whilst it is normally sufficient to start/stop/restart the parent unit, occasionally it may be necessary to start/stop/restart a child unit.
 
 All `systemd` logs can be viewed using `journalctl --user -fu 'TRACE-T*'`
 
@@ -341,7 +383,7 @@ On a new installation, the following environment variables must be present:
    from django.core.management.utils import get_random_secret_key
    print(get_random_secret_key())
 * `SMTP_HOST`, `SMTP_PORT`, `SMTP_USER`, `SMTP_PASSWORD`: These fields are required by Django to send emails using an SMTP proxy. For example, it is possible to configure a Gmail account to function as an SMTP proxy by generating an "application password", in which case case the respective values are: `smtp.gmail.com`, `587`, `<email@gmail.com>`, `<password>`.
-* `GCN_CLIENT_ID`, `GCN_CLIENT_SECRET`, `GCN_GROUP_ID`: These fields are required for the background listener to connect to Nasa's GCN network and receive notices. `GCN_CLIENT_ID` and `GCN_CLIENT_SECRET` will be generated for you when you create an account at [https://gcn.nasa.gov/quickstart](https://gcn.nasa.gov/quickstart). `GCN_GROUP_ID` is an arbitrary identification name that is used by the Kafka service to track which notices it has already marked as read. This can be set to anything so long as it is unique, for example, the domain name of your TRACE-T instance. Changing this will cause Kafka to resend a backlog of notices; TRACE-T will ignore those that it has already recorded.
+* `KAFKA_GROUP_ID`: This field is required by the background listener. It is an arbitrary identification name that is used by the Kafka service to track which notices have already been delivered and acknowledged. This can be set to anything so long as it is unique, for example, the domain name of your TRACE-T instance. Changing this will cause Kafka to resend a backlog of notices; TRACE-T will ignore those that it has already recorded.
 
 Optionally, one can specify the following keys:
 

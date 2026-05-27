@@ -5,7 +5,7 @@ filename: tutorial.md
 
 # Tutorial
 
-TRACE-T lets you listen to notices broadcast via Nasa's General Coordinates Network (GCN) and (conditionally) trigger rapid follow-up observations.
+TRACE-T lets you listen to notices broadcast via Kafka message brokers such as Nasa's General Coordinates Network (GCN) and (conditionally) trigger rapid follow-up observations.
 
 Consider the following example:
 
