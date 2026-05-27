@@ -19,10 +19,26 @@ class PrettyJSONEncoder(json.JSONEncoder):
 
 
 class Stream(models.Model):
-    name = models.CharField(max_length=500)
-    domain = models.CharField(max_length=500)
+    name = models.CharField(
+        max_length=500, help_text="A short descriptive name for this stream."
+    )
+    domain = models.CharField(
+        max_length=500,
+        help_text=(
+            "The domain(s) of the Kafka message broker in the format <code>DOMAIN:PORT</code>. If omitted, the port will default to 9092. This value corresponds to Kafka's <code>bootstrap.servers</code> configuration parameter."
+            "<br><br>Some Kafka brokers use multiple doamins for fault tolerance and these can be provided as a comma-separated list, e.g. <code>DOMAIN1:PORT1,DOMAIN2:PORT2,...</code>. "
+        ),
+    )
     config = models.JSONField(
-        default=dict, blank=True, null=True, encoder=PrettyJSONEncoder
+        default=dict,
+        blank=True,
+        null=True,
+        encoder=PrettyJSONEncoder,
+        help_text=(
+            'A JSON dictionary that maps Kafka configuration names to values. e.g.: <code>{"parameter1": "value1", "parameter2": "value2"}</code>. '
+            "Each Kafka broker may need one or more additional configuration parameters depending on its particular setup."
+            "<br><br>Full documentation of the configuration options is available at <a href='https://docs.confluent.io/platform/current/installation/configuration/consumer-configs.html'>https://docs.confluent.io/platform/current/installation/configuration/consumer-configs.html</a>"
+        ),
     )
     enabled = models.BooleanField(default=False)
     last_polled = models.DateTimeField(
@@ -88,12 +104,26 @@ class Topic(models.Model):
         XML = ("xml", "XML")
         JSON = ("json", "JSON")
 
-    name = models.CharField(max_length=500, unique=True)
+    name = models.CharField(
+        max_length=500,
+        unique=True,
+        help_text="The topic name as set by the Kafka message broker. e.g. <code>gcn.notices.svom.voevent.eclairs</code>",
+    )
     stream = models.ForeignKey(
-        "Stream", related_name="topics", on_delete=models.RESTRICT
+        "Stream",
+        related_name="topics",
+        on_delete=models.RESTRICT,
+        help_text="Select the stream to which this topic belongs.",
     )
     type = models.CharField(
-        max_length=500, choices=Format, default="xml", verbose_name="Format"
+        max_length=500,
+        choices=Format,
+        default="xml",
+        verbose_name="Format",
+        help_text=(
+            "The payload format of this topic's notices. TraceT can parse both JSON and XML payloads. "
+            "This type must match the format of the incoming notices, and it will determine whether a Trigger uses XPath or JPath queries."
+        ),
     )
     status = models.CharField(max_length=500, default="—")
 
