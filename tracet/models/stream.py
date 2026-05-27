@@ -26,7 +26,7 @@ class Stream(models.Model):
         max_length=500,
         help_text=(
             "The domain(s) of the Kafka message broker in the format <code>DOMAIN:PORT</code>. If omitted, the port will default to 9092. This value corresponds to Kafka's <code>bootstrap.servers</code> configuration parameter."
-            "<br><br>Some Kafka brokers use multiple doamins for fault tolerance and these can be provided as a comma-separated list, e.g. <code>DOMAIN1:PORT1,DOMAIN2:PORT2,...</code>. "
+            "<br><br>Some Kafka brokers use multiple domains for fault tolerance and these can be provided as a comma-separated list, e.g. <code>DOMAIN1:PORT1,DOMAIN2:PORT2,...</code>. "
         ),
     )
     config = models.JSONField(
