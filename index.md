@@ -220,7 +220,7 @@ A user can be asigned groups from within their respective user edit form.
 
 In TraceT, upstream Kafka message brokers are called _streams_. TraceT can be configured to listen to multiple streams.
 
-### Viewing existing streams
+#### Viewing existing streams
 
 Existing streams can be viewed at `/admin/tracet/stream/`. This overview will indicate:
 
