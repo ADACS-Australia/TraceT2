@@ -26,7 +26,7 @@ class Notice(models.Model):
         unique_together = ("topic", "offset")
 
     def __str__(self):
-        return str(self.topic)
+        return f"{self.topic} @ offset {self.offset}"
 
     def get_absolute_url(self):
         return reverse("notice", args=[self.id])

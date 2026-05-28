@@ -96,7 +96,7 @@ class Stream(models.Model):
             )
             raise ValidationError("Incorrect KAFKA configuration: " + str(e))
         else:
-            logger.error(f"Stream validation succeeded ({self.name} @ {self.domain})")
+            logger.debug(f"Stream validation succeeded ({self.name} @ {self.domain})")
 
 
 class Topic(models.Model):

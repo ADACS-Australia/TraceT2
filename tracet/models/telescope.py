@@ -104,7 +104,8 @@ class AbstractTelescope(models.Model):
             observation.status = Observation.Status.UNKNOWN_FAILURE
 
         observation.log = self.get_log()
-        return observation.save()
+        observation.save()
+        return observation
 
     def get_pointings(self, event: tracet.models.Event) -> list[SkyCoord]:
         raise NotImplementedError
@@ -123,12 +124,14 @@ class AbstractTelescope(models.Model):
     def check_override(
         self, current_observation: Observation, proposed_observation: Observation
     ) -> None:
-        # Default implementation
-        if proposed_observation.priority > current_observation.priority:
+        # Lower numeric priority = higher priority. Only strictly higher-priority
+        # observations (lower number) may override.
+        if proposed_observation.priority >= current_observation.priority:
             self.log(
-                "Preexisting observation",
-                f"Preexisting observation (id={current_observation.id}) in effect with "
-                f"priority {current_observation.priority} (versus our priority: {proposed_observation.priority})",
+                "Preexisting observation blocks override",
+                f"Current observation (id={current_observation.id}) has priority "
+                f"{current_observation.priority} <= proposed priority "
+                f"{proposed_observation.priority}",
             )
             raise AbstractTelescope.OverrideException()
 

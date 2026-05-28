@@ -31,7 +31,7 @@ class Observation(models.Model):
     log = models.TextField()
 
     def __bool__(self):
-        return self.success and not self.istest
+        return self.status == Observation.Status.API_OK and not self.istest
 
     def get_absolute_url(self):
         return reverse("observationview", args=[self.id])

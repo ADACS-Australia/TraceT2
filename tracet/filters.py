@@ -71,7 +71,7 @@ class Observation(django_filters.FilterSet):
         super().__init__(*args, **kwargs)
 
         # Observatory is just a CharField but we want it to behave like it has `choices` set.
-        # We can't manually set this in the model, since the list of observaotries changes dynamically based
+        # We can't manually set this in the model, since the list of observatories changes dynamically based
         # on which telescopes are registered. To do this we:
         # 1. Set observatory as a ChoiceFilter
         # 2. Populate the select list with all unique existing values for observatory

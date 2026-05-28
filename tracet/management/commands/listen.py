@@ -52,7 +52,7 @@ class Command(BaseCommand):
             consumer = stream.make_consumer()
         except Exception as e:
             logger.error(
-                f"Stream {stream.name} failed to connect to remote Kakfa broker",
+                f"Stream {stream.name} failed to connect to remote Kafka broker",
                 exc_info=e,
             )
             raise
@@ -90,17 +90,15 @@ class Command(BaseCommand):
                     )
 
                 logger.info(
-                    f"Recieved a new message ({stream.name} | {message.topic()} #{message.offset()} @ {created})"
+                    f"Received a new message ({stream.name} | {message.topic()} #{message.offset()} @ {created})"
                 )
 
                 if message.error():
                     logger.warning(message.error())
 
                     try:
-                        topic = Topic.objects.get(name=message.topic())
-                        topic.status = f"Error ({message.error().str()})"
-                        topic.full_clean()
-                        topic.save()
+                        error_status = f"Error ({message.error().str()})"
+                        Topic.objects.filter(name=message.topic()).update(status=error_status)
                     except Exception as e:
                         logger.error(
                             "Tried and failed to record Kafka error message",
@@ -109,9 +107,6 @@ class Command(BaseCommand):
                 else:
                     try:
                         topic = Topic.objects.get(name=message.topic())
-                        topic.status = f"OK (Last message received: {datetime.datetime.now(datetime.UTC)})"
-                        topic.full_clean()
-                        topic.save()
 
                         notice = Notice(
                             topic=topic,
@@ -124,6 +119,12 @@ class Command(BaseCommand):
 
                         # Let the service know we have processed this message
                         consumer.commit(message)
+
+                        # Update status to reflect successful receipt
+                        ok_status = f"OK (Last message received: {datetime.datetime.now(datetime.UTC)})"
+                        if topic.status != ok_status:
+                            topic.status = ok_status
+                            topic.save(update_fields=["status"])
                     except ValidationError as e:
                         logger.error(
                             "A ValidationError occurred saving a new notice; assuming we have already seen this notice",
@@ -138,5 +139,5 @@ class Command(BaseCommand):
                             "An error occurred saving a new notice:", exc_info=e
                         )
 
-        logging.info(f"Keepalive wants me dead; closing {stream.name} Kafka consumer")
+        logger.info(f"Keepalive wants me dead; closing {stream.name} Kafka consumer")
         consumer.close()

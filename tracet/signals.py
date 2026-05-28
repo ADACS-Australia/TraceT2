@@ -68,7 +68,7 @@ def on_notice_save(sender, instance, created, **kwargs):
     """
     When a notice is created we must:
 
-    1. Create (or update) an event for each Trigger, if the Trigger is listening to the notice's steam.
+    1. Create (or update) an event for each Trigger, if the Trigger is listening to the notice's stream.
     2. Run each applicable trigger.
     """
     notice = instance

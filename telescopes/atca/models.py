@@ -46,7 +46,7 @@ class ATCA(AbstractTelescope):
             ra = event.querylatest(self.ra_path, createdbefore)
             dec = event.querylatest(self.dec_path, createdbefore)
             return [SkyCoord(float(ra), float(dec), unit=("deg", "deg"))]
-        except TypeError, ValueError:
+        except (TypeError, ValueError):
             return []
 
     def prepare_request(self, observation: Observation):

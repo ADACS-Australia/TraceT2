@@ -108,7 +108,7 @@ class Decision(models.Model):
         possible using the Django ORM.
         """
 
-        return self.objects.raw("""
+        return Decision.objects.raw("""
             /*
              * First: get most recent decision per event that triggered a successful observation.
              */

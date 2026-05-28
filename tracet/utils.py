@@ -8,7 +8,7 @@ def truthy(val) -> bool:
     # Int/Floats 0 -> False, rest -> True
     try:
         return bool(float(val))
-    except ValueError:
+    except (ValueError, TypeError):
         pass
 
     # String values
@@ -19,7 +19,7 @@ def truthy(val) -> bool:
         elif string in ("1", "true", "yes"):
             return True
 
-    raise ValueError(f"Invalid boolean value: '{string}'")
+    raise ValueError(f"Invalid boolean value: '{val}'")
 
 
 class ThreadsafeBool:

@@ -10,6 +10,6 @@ def query_append(request, **kwargs):
         if v is not None:
             updated[k] = v
         else:
-            updated.pop(k, 0)
+            updated.pop(k, None)
 
     return updated.urlencode()

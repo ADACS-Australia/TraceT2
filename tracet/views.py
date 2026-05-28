@@ -179,9 +179,9 @@ class TriggerList(View):
             )
             return HttpResponseRedirect(reverse("triggers"))
         else:
-            messages.success(
+            messages.error(
                 request,
-                "Trigger statusesand/or priorities could not be updated due to a form error.",
+                "Trigger statuses and/or priorities could not be updated due to a form error.",
             )
             return render(
                 request,
@@ -251,22 +251,19 @@ class TriggerBase(View):
 
     def post(self, request, id=None):
         # We want to limit exactly no more than 1 configured telescope per trigger
-        # Validate each telescope fieldset first to ensure `cleaned_data` exists
+        # Validate each telescope formset first to ensure `cleaned_data` exists
         telescopeformsets = {shortname: f for (shortname, _, f) in self.telescopes}
-        all(f.is_valid() for f in telescopeformsets.values())
+        for f in telescopeformsets.values():
+            f.is_valid()
 
         # Count the telescopes
         # (There must be a better way to do than simply counting all fields where DELETE=False)
         ntelescopes = sum(
-            [
-                (
-                    hasattr(f, "cleaned_data")
-                    and "DELETE" in f.cleaned_data
-                    and f.cleaned_data["DELETE"] is False
-                )
-                for formset in telescopeformsets.values()
-                for f in formset
-            ]
+            1
+            for formset in telescopeformsets.values()
+            for form in formset
+            if hasattr(form, "cleaned_data")
+            and form.cleaned_data.get("DELETE") is not True
         )
 
         # ...and attach the error

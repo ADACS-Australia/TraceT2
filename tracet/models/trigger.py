@@ -164,23 +164,22 @@ class Event(models.Model):
         return None
 
     def updatetime(self):
-        self.time = None
         time_path = self.trigger.time_path
+        earliest_time = None
 
         for notice in self.notices.all():
-            # Update event time to match the youngest time present in notices
             try:
                 t = dateutil.parser.parse(
                     notice.query(time_path),
                     default=datetime.datetime(1900, 1, 1, tzinfo=datetime.UTC),
                 )
 
-                if self.time is None or (t and t < self.time):
-                    self.time = t
-                    self.save()
+                if t and (earliest_time is None or t < earliest_time):
+                    earliest_time = t
             except (TypeError, dateutil.parser.ParserError) as e:
                 logger.warning(
                     f"Failed to parse time (Trigger id={self.trigger.id}, Notice id={notice.id}) with path {self.trigger.time_path}. Error: {str(e)}"
                 )
 
+        self.time = earliest_time
         self.save()

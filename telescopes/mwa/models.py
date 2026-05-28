@@ -123,7 +123,7 @@ class MWACorrelator(MWABase):
             ra = event.querylatest(self.ra_path, createdbefore)
             dec = event.querylatest(self.dec_path, createdbefore)
             return [SkyCoord(float(ra), float(dec), unit=("deg", "deg"))]
-        except TypeError, ValueError:
+        except (TypeError, ValueError):
             return []
 
     def prepare_request(self, observation: Observation):
@@ -189,7 +189,7 @@ class MWAVCS(MWABase):
             ra = event.querylatest(self.ra_path, createdbefore)
             dec = event.querylatest(self.dec_path, createdbefore)
             return [SkyCoord(float(ra), float(dec), unit=("deg", "deg"))]
-        except TypeError, ValueError:
+        except (TypeError, ValueError):
             return []
 
     def prepare_request(self, observation: Observation):
@@ -308,7 +308,7 @@ class MWAGW(MWABase):
                 f"skymap={url} index={index}",
             )
             skymap = fits.open(BytesIO(requests.get(url).content))[int(index)].data
-        except ValueError, ValidationError:
+        except (ValueError, ValidationError):
             self.log(
                 "Skymap isn't a URL; assuming it is an embedded FITS object encoded as Base64",
                 f"skymap={skymap}",
