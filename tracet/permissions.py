@@ -38,6 +38,7 @@ rules.add_perm("tracet.delete_stream", rules.is_group_member("admin"))
 # Allow adding/deleting Topics
 rules.add_perm("tracet.view_topic", rules.is_group_member("admin"))
 rules.add_perm("tracet.add_topic", rules.is_group_member("admin"))
+rules.add_perm("tracet.change_topic", rules.is_group_member("admin"))
 rules.add_perm("tracet.delete_topic", rules.is_group_member("admin"))
 
 # User administration permissions

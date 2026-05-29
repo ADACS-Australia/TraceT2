@@ -79,7 +79,7 @@ class Stream(models.Model):
         # Calling self.topics will error if we haven't been saved to the database.
         # Use the presence of the primary key to make this determination.
         if self.id:
-            topics = [t.name for t in self.topics.all()]
+            topics = [t.name for t in self.topics.filter(enabled=True)]
             logger.debug(
                 f"Stream {self.name} subscribing to {len(topics)} topics: {' '.join(topics)}"
             )
@@ -141,6 +141,7 @@ class Topic(models.Model):
             "This type must match the format of the incoming notices, and it will determine whether a Trigger uses XPath or JPath queries."
         ),
     )
+    enabled = models.BooleanField(default=True)
     status = models.CharField(max_length=500, default="—")
 
     def __str__(self):

@@ -38,7 +38,9 @@ class Topic(admin.ModelAdmin):
         "notice_count",
         "payload_filesize",
         "status",
+        "enabled",
     ]
+    fields = ["name", "stream", "type", "status", "enabled"]
     readonly_fields = ["status"]
 
     @admin.display(description="Payload size [MB]")
@@ -59,8 +61,13 @@ class Topic(admin.ModelAdmin):
     def notice_count(self, obj):
         return obj.notices.count()
 
-    def has_change_permission(self, request, obj=None):
-        return False  # Disable editing existing entries
+    def get_readonly_fields(self, request, obj=None):
+        if obj is None:
+            return ["status"]
+        else:
+            # Once a topic is created, we limit edit solely to
+            # modifying "enabled".
+            return ["name", "stream", "type", "status"]
 
     # The following hooks are to detect changes to Topic configuration
     # made via the admin interface and trigger the listener to requery and make new
