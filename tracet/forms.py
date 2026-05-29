@@ -42,11 +42,11 @@ class Trigger(forms.ModelForm):
                         "eventid_path",
                         mark_safe(
                             "Event ID path was empty for one or more archival notice "
-                            f"(e.g. <a href='{ notice.get_absolute_url() }'>notice {notice.id}</a>)"
+                            f"(e.g. <a href='{notice.get_absolute_url()}'>notice {notice.id}</a>)"
                         ),
                     )
                     break
-        except (etree.XPathEvalError, jsonpath.JSONPathSyntaxError):
+        except etree.XPathEvalError, jsonpath.JSONPathSyntaxError:
             # This is handled by the field validation
             pass
 
@@ -58,19 +58,18 @@ class Trigger(forms.ModelForm):
                         "time_path",
                         mark_safe(
                             "Time path was empty for one or more archival notice "
-                            f"(e.g. <a href='{ notice.get_absolute_url() }'>notice {notice.id}</a>)"
+                            f"(e.g. <a href='{notice.get_absolute_url()}'>notice {notice.id}</a>)"
                         ),
                     )
                     break
-        except (etree.XPathEvalError, jsonpath.JSONPathSyntaxError):
+        except etree.XPathEvalError, jsonpath.JSONPathSyntaxError:
             # This is handled by the field validation
             pass
-
-
 
     class Meta:
         model = models.Trigger
         fields = ["name", "user", "topics", "eventid_path", "time_path", "expiry"]
+        widgets = {"expiry": forms.NumberInput(attrs={"autocomplete": "off"})}
 
 
 class NumericRangeCondition(forms.ModelForm):
