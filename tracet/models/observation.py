@@ -24,10 +24,10 @@ class Observation(models.Model):
         DATA_FAILURE = "data_failure", "Unable to prepare request"
         UNKNOWN_FAILURE = "unknown_failure", "An unexpected failure occurred"
 
-    decision = models.ForeignKey(
+    decision = models.OneToOneField(
         "Decision",
         null=True,
-        related_name="observations",
+        related_name="observation",
         on_delete=models.CASCADE,
     )
     created = models.DateTimeField(default=timezone.now)
@@ -40,14 +40,16 @@ class Observation(models.Model):
     istest = models.BooleanField()
     log = models.TextField()
 
-    def __bool__(self):
-        return self.status == Observation.Status.API_OK and not self.istest
-
     def get_absolute_url(self):
         return reverse("observationview", args=[self.id])
 
     def get_istest_display(self):
         return "Test" if self.istest else "Active"
+
+    @property
+    def observatory_label(self) -> str:
+        configuration = f" ({self.configuration})" if self.configuration else ""
+        return self.observatory + configuration
 
     def in_progress(self):
         if self.status == Observation.Status.API_OK and self.created and self.finish:

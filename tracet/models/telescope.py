@@ -68,7 +68,7 @@ class AbstractTelescope(models.Model):
     def get_log(self) -> str:
         return "\n".join(self._logs).strip()
 
-    def create_observation(self, decision):
+    def create_observation(self, decision) -> Observation:
         observation = Observation(
             decision=decision,
             observatory=self.OBSERVATORY,

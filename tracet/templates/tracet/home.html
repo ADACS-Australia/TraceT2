@@ -16,7 +16,7 @@
         {% with obs=recentsuccessfulobservation event=recentsuccessfulobservation.decision.event %}
             <p>
                 There are <strong>{{ activetriggercount | default:"no" }} active triggers</strong> (and {{ inactivetriggercount }} inactive).
-                {% if obs is not None %}
+                {% if obs %}
                     The most recent successful observation was <strong><a href="{{ obs.get_absolute_url }}">{{ obs.created | timesince }} ago</a></strong>
                     triggered by <strong><a href="{{ event.get_absolute_url }}">event {{ event.eventid }}</a></strong> and
                     using the <strong>{{ obs.observatory }}</strong>.
@@ -61,13 +61,15 @@
                             <td>{{ event.time | iso8601 }}</td>
                             <td><span class="vote {% votetotext decision.conclusion %}"></span></td>
                             <td>
-                                {% for observation in decision.observations.all %}
-                                    <a class="observation-status {{ observation.status }}" title="{{ observation.get_status_display }}" href="{{ observation.get_absolute_url }}">
-                                        {{ observation.observatory }}{% if observation.configuration %} ({{ observation.configuration }}){% endif %}
-                                    </a>
-                                {% empty %}
-                                    &mdash;
-                                {% endfor %}
+                                {% with observation=decision.observation %}
+                                    {% if observation %}
+                                        <a class="observation-status {{ observation.status }}" title="{{ observation.get_status_display }}" href="{{ observation.get_absolute_url }}">
+                                            {{ observation.observatory_label }}
+                                        </a>
+                                    {% else %}
+                                        &mdash;
+                                    {% endif %}
+                                {% endwith %}
                             </td>
                         </tr>
                     {% endwith %}

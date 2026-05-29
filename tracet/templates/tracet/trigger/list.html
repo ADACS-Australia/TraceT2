@@ -42,7 +42,7 @@
                                 {% endwith %}
                             </td>
                             {% with obs=trigger.get_last_attempted_observation %}
-                                <td>{% if obs is not None %}{{ obs.created | timesince }} ago {% if obs.istest %}(test){% endif %}{% else %}—{% endif %}</td>
+                                <td>{% if obs %}{{ obs.created | timesince }} ago {% if obs.istest %}(test){% endif %}{% else %}—{% endif %}</td>
                             {% endwith %}
                             <td class="field active">{{ form.active }}</td>
                         </tr>

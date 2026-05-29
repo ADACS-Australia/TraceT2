@@ -1,0 +1,14 @@
+Hi {{ user.get_short_name | default:user.get_username }},
+
+Your trigger "{{ trigger.name }}" has evaluted to {{ decision.conclusion.label }} in response to a new notice.
+
+{% if decision.conclusion == 0 %}As this is a MAYBE, no observation was attempted. You can manually trigger an observation by retriggering.
+{% elif decision.observation.status == "api_ok" %}An observation with {{ observation.observatory_label }} has been successfully attempted.
+{% elif decision.observation %}An observation with {{ observation.observatory }} was attempted but has failed (status = {{ decision.observation.get_status_display }}).
+{% else %}No observation was attempted.
+{% endif %}
+Full details of the decision are available here: {{ baseurl }}{{ decision.event.get_absolute_url }}
+
+Kind regards,
+TraceT
+

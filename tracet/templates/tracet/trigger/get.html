@@ -137,13 +137,15 @@
                         <span class="vote {% votetotext decision.conclusion %}"></span>
                     </td>
                     <td style="display: flex; justify-content: center; gap: 0 1rem; align-items: center;">
-                        {% for obs in decision.observations.all %}
-                            <a class="observation-status {{ obs.status }}" title="{{ obs.get_status_display }}" href="{{ obs.get_absolute_url }}">
-                                {{ obs.observatory }}{% if obs.configuration %} ({{ obs.configuration }}){% endif %}
-                            </a>
-                        {% empty %}
-                            &mdash;
-                        {% endfor %}
+                        {% with obs=decision.observation %}
+                            {% if obs %}
+                                <a class="observation-status {{ obs.status }}" title="{{ obs.get_status_display }}" href="{{ obs.get_absolute_url }}">
+                                    {{ obs.observatory_label }}
+                                </a>
+                            {% else %}
+                                &mdash;
+                            {% endif %}
+                        {% endwith %}
                     </td>
                 </tr>
                 {% endfor %}

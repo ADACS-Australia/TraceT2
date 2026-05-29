@@ -1,7 +1,10 @@
 import logging
 
+from django.conf import settings
+from django.core.mail import send_mail
 from django.db.models.signals import post_save, m2m_changed
 from django.dispatch import receiver
+from django.template.loader import render_to_string
 
 from tracet import models
 
@@ -71,7 +74,7 @@ def on_notice_save(sender, instance, created, **kwargs):
     1. Create (or update) an event for each Trigger, if the Trigger is listening to the notice's stream.
     2. Run each applicable trigger.
     """
-    notice = instance
+    notice: models.Notice = instance
 
     if not created:
         return
@@ -80,9 +83,32 @@ def on_notice_save(sender, instance, created, **kwargs):
     for trigger in models.Trigger.objects.order_by("priority"):
         # (Maybe) create a new event
         if event := trigger.get_or_create_event(notice):
-            models.Decision.objects.create(
+            decision: models.Decision = models.Decision.objects.create(
                 event=event, source=models.Decision.Source.NOTICE
             )
+
+            # Send an email if:
+            # 1. Conclusion is at least a MAYBE (allowing for user-intervention)
+            # 2. And there's a configured telescope
+            if (
+                decision.conclusion in (models.Vote.MAYBE, models.Vote.PASS)
+                and trigger.get_telescope()
+                and (email := trigger.user.email)
+            ):
+                send_mail(
+                    subject=f"TraceT decision alert for trigger '{trigger.name}'",
+                    message=render_to_string(
+                        "tracet/email/decision.html",
+                        context={
+                            "trigger": trigger,
+                            "user": trigger.user,
+                            "decision": decision,
+                            "baseurl": settings.BASEURL,
+                        },
+                    ),
+                    from_email=None,
+                    recipient_list=[email],
+                )
 
 
 @receiver(post_save, sender=models.NumericRangeCondition)

@@ -25,7 +25,7 @@ class Decision(models.Model):
     A new Decision is created each time a Notice arrives. On save, it runs
     every Condition (expiration, numeric range, boolean, equality) against
     each Notice chronologically, producing one Factor per condition.
-    Condition inheritance is implemented via the (non-commutative) addition of 
+    Condition inheritance is implemented via the (non-commutative) addition of
     factors, which either inherits the last vote or takes the new vote if non-null.
     If the final conclusion is PASS, the Trigger's telescope fires an Observation.
 
@@ -99,8 +99,8 @@ class Decision(models.Model):
         return self.source != Decision.Source.SIMULATED
 
     @property
-    def conclusion(self) -> int:
-        conclusion: int = min(
+    def conclusion(self) -> Vote:
+        conclusion = min(
             *[
                 (Vote.FAIL if factor.vote is None else factor.vote)
                 for factor in self.factors.all()
@@ -113,7 +113,7 @@ class Decision(models.Model):
         if conclusion == Vote.MAYBE and self.source == Decision.Source.MANUAL:
             return Vote.PASS
         else:
-            return conclusion
+            return Vote(conclusion)
 
     @classmethod
     def get_interesting_decisions(self):

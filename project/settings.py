@@ -28,14 +28,13 @@ SECRET_KEY = os.getenv("DJANGO_SECRET_KEY")
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True if os.getenv("DJANGO_DEBUG") and truthy(os.getenv("DJANGO_DEBUG")) else False
 
+BASEURL = os.getenv("BASEURL", "http://localhost").strip("/")
+
 ALLOWED_HOSTS = [
-    "localhost",
+    BASEURL.split("://")[-1]  # remove leading protocol
 ]
-if os.getenv("HOSTNAME"):
-    ALLOWED_HOSTS.append(os.getenv("HOSTNAME"))
 
-CSRF_TRUSTED_ORIGINS = ["https://" + host for host in ALLOWED_HOSTS]
-
+CSRF_TRUSTED_ORIGINS = [BASEURL]
 
 # Application definition
 
