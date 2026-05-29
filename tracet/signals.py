@@ -92,6 +92,7 @@ def on_notice_save(sender, instance, created, **kwargs):
             # 2. And there's a configured telescope
             if (
                 decision.conclusion in (models.Vote.MAYBE, models.Vote.PASS)
+                and trigger.active
                 and trigger.get_telescope()
                 and (email := trigger.user.email)
             ):
