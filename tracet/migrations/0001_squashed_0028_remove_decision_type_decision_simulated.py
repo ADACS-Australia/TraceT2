@@ -131,20 +131,29 @@ class Migration(migrations.Migration):
             old_name='Event',
             new_name='Notice',
         ),
-        migrations.RenameIndex(
-            model_name='notice',
-            new_name='tracet__created_d60b86_idx',
-            old_name='tracet__created_d518f6_idx',
-        ),
         migrations.AlterField(
             model_name='trigger',
             name='time_path',
             field=models.CharField(help_text='The (x|j)json path to event time. This value is set by the first matching notice and is not overridden by subsequent notices.', max_length=250),
         ),
-        migrations.RenameField(
-            model_name='eventgroup',
-            old_name='events',
-            new_name='notices',
+        # Standard RenameField on an M2M field generates "INSERT INTO ... SELECT ...
+        # FROM <old_through_table>" which fails on SQLite when the table was already
+        # renamed by a prior RenameModel. Use SeparateDatabaseAndState to rename the
+        # through table at the database level and update Django's state separately.
+        migrations.SeparateDatabaseAndState(
+            database_operations=[
+                migrations.RunSQL(
+                    "ALTER TABLE tracet_eventgroup_events RENAME TO tracet_eventgroup_notices",
+                    "ALTER TABLE tracet_eventgroup_notices RENAME TO tracet_eventgroup_events",
+                ),
+            ],
+            state_operations=[
+                migrations.RenameField(
+                    model_name='eventgroup',
+                    old_name='events',
+                    new_name='notices',
+                ),
+            ],
         ),
         migrations.RenameModel(
             old_name='EventGroup',
