@@ -14,6 +14,15 @@ logger = logging.getLogger(__name__)
 
 
 class Notice(models.Model):
+    """
+    A single message received from Kafka.
+
+    Notices are the raw payload of an alert, stored as binary so they can
+    be re-parsed against different XPath/JSONPath selectors. When saved,
+    the ``on_notice_save`` signal iterates every Trigger (by priority) and
+    creates or updates an Event, then fires a Decision.
+    """
+
     topic = models.ForeignKey("Topic", related_name="notices", on_delete=models.CASCADE)
     offset = models.IntegerField()
     created = models.DateTimeField(null=True)

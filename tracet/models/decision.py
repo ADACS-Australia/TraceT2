@@ -5,12 +5,34 @@ from django.utils.safestring import SafeText, mark_safe
 
 
 class Vote(models.IntegerChoices):
+    """
+    Outcome of a single Condition evaluation, or of an entire Decision.
+
+    The final Decision is the minimum of all Factor votes: one Fail means
+    the whole Decision fails. A Maybe is promoted to Pass for MANUAL
+    decisions (operator override), but stays Maybe for NOTICE decisions.
+    """
+
     FAIL = -1, "Fail"
     MAYBE = 0, "Maybe"
     PASS = 1, "Pass"
 
 
 class Decision(models.Model):
+    """
+    An evaluation of all trigger conditions at a instance of time for an Event.
+
+    A new Decision is created each time a Notice arrives. On save, it runs
+    every Condition (expiration, numeric range, boolean, equality) against
+    each Notice chronologically, producing one Factor per condition.
+    Condition inheritance is implemented via the (non-commutative) addition of 
+    factors, which either inherits the last vote or takes the new vote if non-null.
+    If the final conclusion is PASS, the Trigger's telescope fires an Observation.
+
+    SIMULATED decisions are created lazily when viewing a Trigger, so the
+    UI can show what _would_ have happened without actually observing.
+    """
+
     class Source(models.TextChoices):
         NOTICE = ("notice", "Notice")
         MANUAL = ("manual", "Manually triggered")
@@ -168,6 +190,15 @@ class Decision(models.Model):
 
 
 class Factor(models.Model):
+    """
+    A single condition's vote on a Decision.
+
+    Each Factor corresponds to one Condition. The ``vote`` can be Pass,
+    Maybe, or Fail (or null if the condition's selector returned nothing).
+    The ``__add__`` operator implements condition inheritance:
+    if the new vote is null, the previous vote is kept (marked inherited).
+    """
+
     decision = models.ForeignKey(
         "Decision", related_name="factors", on_delete=models.CASCADE
     )

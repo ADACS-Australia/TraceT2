@@ -13,6 +13,14 @@ logger = logging.getLogger(__name__)
 
 
 class ExpirationCondition:
+    """
+    Non-model condition that fails a Decision once the Event has aged past the Trigger's expiry.
+
+    Unlike the other conditions, this is not stored per-Trigger in the
+    database; it is built on the fly from ``Trigger.expiry`` and injected
+    into the conditions list by ``get_conditions()``.
+    """
+
     def __init__(self, expiration):
         self.expiration = expiration
 
@@ -31,6 +39,8 @@ class ExpirationCondition:
 
 
 class NumericRangeCondition(models.Model):
+    """Condition that extracts a value from a Notice and tests if it falls within a range."""
+
     selector = JXPathField()
     val1 = models.FloatField(verbose_name="Lower bound")
     val2 = models.FloatField(verbose_name="Upper bound")
@@ -59,6 +69,8 @@ class NumericRangeCondition(models.Model):
 
 
 class BooleanCondition(models.Model):
+    """Condition that extracts a value from a Notice and tests for truthiness."""
+
     selector = JXPathField()
     if_true = models.IntegerField(choices=Vote)
     if_false = models.IntegerField(choices=Vote)
@@ -85,6 +97,8 @@ class BooleanCondition(models.Model):
 
 
 class EqualityCondition(models.Model):
+    """Condition that extracts a value from a Notice and tests for membership in a list."""
+
     selector = JXPathField()
     vals = models.TextField(
         verbose_name="Candidates",

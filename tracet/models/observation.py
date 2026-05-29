@@ -6,6 +6,16 @@ from django.utils import timezone
 
 
 class Observation(models.Model):
+    """
+    The record of an (attempted) observation request sent to a telescope.
+
+    Created by the telescope's ``create_observation`` method when a Decision
+    passes. The ``status`` tracks the outcome: API_OK means the observatory
+    accepted the request; other statuses indicate failures or clashes.
+    Observations are never deleted — they persist even when a Trigger's
+    criteria change and an Event is disabled.
+    """
+
     class Status(models.TextChoices):
         API_OK = "api_ok", "OK"
         API_FAILURE = "api_failure", "Failure"

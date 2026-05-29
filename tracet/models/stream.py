@@ -19,6 +19,14 @@ class PrettyJSONEncoder(json.JSONEncoder):
 
 
 class Stream(models.Model):
+    """
+    A Kafka broker endpoint.
+
+    The ``listen`` command spawns a thread per enabled Stream to poll for
+    messages. Each Stream owns one or more Topics; the consumer subscribes
+    to all topic names belonging to that stream. Messages become Notices.
+    """
+
     name = models.CharField(
         max_length=500, help_text="A short descriptive name for this stream."
     )
@@ -100,6 +108,14 @@ class Stream(models.Model):
 
 
 class Topic(models.Model):
+    """
+    A named Kafka topic belonging to a Stream.
+
+    Triggers reference Topics (not Streams directly) to define which message
+    streams they should react to. The ``type`` field determines whether
+    Notices from this topic are parsed as XML or JSON.
+    """
+
     class Format(models.TextChoices):
         XML = ("xml", "XML")
         JSON = ("json", "JSON")

@@ -16,6 +16,17 @@ logger = logging.getLogger(__name__)
 
 
 class AbstractTelescope(models.Model):
+    """
+    Base class for telescope integrations.
+
+    Concrete subclasses (ATCA, MWACorrelator, etc.) are linked to a Trigger
+    via a one-to-one relationship. When a Decision passes, the telescope's
+    ``create_observation`` method runs: it extracts pointings from the Event,
+    prepares the API request, checks for clashing observations, and fires
+    the request. The ``_logs`` accumulator captures what happened at each
+    step and is written to the Observation record on success or failure.
+    """
+
     class Meta:
         abstract = True
 

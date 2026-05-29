@@ -22,6 +22,16 @@ logger = logging.getLogger(__name__)
 
 
 class Trigger(models.Model):
+    """
+    A rule set that matches incoming Notices and evaluates whether to observe.
+
+    When a new Notice arrives, every Trigger checks whether it responds to the
+    notice's topic. If so, the Trigger extracts an event ID via ``eventid_path``
+    and groups related Notices into an Event. The Trigger's conditions
+    (expiration, numeric range, boolean, equality) are evaluated each time
+    a new Decision is created for that Event.
+    """
+
     class Manager(models.Manager):
         def get_queryset(self):
             return (
@@ -112,6 +122,17 @@ class Trigger(models.Model):
 
 
 class Event(models.Model):
+    """
+    A group of Notices relating to the same underlying astrophysical event.
+
+    Events are created by Triggers when a Notice's ``eventid_path`` extracts
+    a matching ID. Multiple Notices can belong to the same Event (e.g. initial
+    alert followed by refined coordinates). Each new Notice triggers a new
+    Decision so conditions are re-evaluated against the latest data. The
+    ``time`` field is the earliest timestamp found across all notices and
+    feeds into the ExpirationCondition.
+    """
+
     class Manager(models.Manager):
         def get_queryset(self):
             return (
@@ -154,7 +175,9 @@ class Event(models.Model):
 
     def querylatest(self, query, createdbefore=None):
         notices = self.notices.order_by("-created")
-        notices = notices.filter(created__lte=createdbefore) if createdbefore else notices
+        notices = (
+            notices.filter(created__lte=createdbefore) if createdbefore else notices
+        )
 
         for notice in notices:
             result = notice.query(query)
