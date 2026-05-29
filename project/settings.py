@@ -31,7 +31,8 @@ DEBUG = True if os.getenv("DJANGO_DEBUG") and truthy(os.getenv("DJANGO_DEBUG")) 
 BASEURL = os.getenv("BASEURL", "http://localhost").strip("/")
 
 ALLOWED_HOSTS = [
-    BASEURL.split("://")[-1]  # remove leading protocol
+    # Remove leading protocol and then trailing port (if present)
+    BASEURL.split("://")[-1].split(":")[0]
 ]
 
 CSRF_TRUSTED_ORIGINS = [BASEURL]
