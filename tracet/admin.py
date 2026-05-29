@@ -3,15 +3,22 @@ from django.core.cache import cache
 from django.contrib import admin
 import django.contrib.auth as auth
 
-# Register your models here.
 from . import models
+from tracet.templatetags.iso8601 import iso8601
 
 
 @admin.register(models.Stream)
 class Stream(admin.ModelAdmin):
-    list_display = ["name", "domain", "last_polled", "enabled"]
-    fields = ["name", "domain", "config", "enabled", "last_polled"]
-    readonly_fields = ["last_polled"]
+    list_display = ["name", "domain", "_last_polled", "enabled"]
+    fields = ["name", "domain", "config", "enabled", "_last_polled"]
+    readonly_fields = ["_last_polled"]
+
+    @admin.display(description="Last Polled")
+    def _last_polled(self, obj=None):
+        if obj is None:
+            return "Never polled"
+        else:
+            return iso8601(obj.last_polled)
 
     # The following hooks are to detect changes to Stream configuration
     # made via the admin interface and trigger the listener to requery and make new
