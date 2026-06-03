@@ -62,7 +62,7 @@ class Decision(models.Model):
 
         # Attach all factors
         notices = list(
-            self.event.notices.filter(created__lte=self.created).order_by("created")
+            self.event.notices.filter(received__lte=self.created).order_by("received")
         )
 
         if len(notices) == 0:
