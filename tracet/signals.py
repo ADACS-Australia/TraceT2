@@ -83,9 +83,16 @@ def on_notice_save(sender, instance, created, **kwargs):
     for trigger in models.Trigger.objects.order_by("priority"):
         # (Maybe) create a new event
         if event := trigger.get_or_create_event(notice):
-            decision: models.Decision = models.Decision.objects.create(
-                event=event, source=models.Decision.Source.NOTICE
-            )
+            try:
+                decision: models.Decision = models.Decision.objects.create(
+                    event=event, source=models.Decision.Source.NOTICE
+                )
+            except Exception as e:
+                logger.error(
+                    f"Trigger {trigger.name} (id={trigger.id}) threw an exception when trying to form decision in response to notice (id={notice.id})",
+                    exc_info=e,
+                )
+                continue
 
             # Send an email if:
             # 1. Conclusion is at least a MAYBE (allowing for user-intervention)
