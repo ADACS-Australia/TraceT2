@@ -87,7 +87,7 @@ class AbstractTelescope(models.Model):
                     status=Observation.Status.API_OK,
                     observatory=self.OBSERVATORY,
                     finish__gte=timezone.now(),
-                    istest=observation.istest,
+                    istest=observation.istest,  # Test and non-test observations do not see each other
                 )
                 .order_by("-finish")
                 .first()

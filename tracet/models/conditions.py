@@ -113,7 +113,7 @@ class EqualityCondition(models.Model):
     def __str__(self):
         vals = self.get_vals()
         if len(vals) <= 4:
-            return f"IF {self.selector} IN {tuple(vals)})"
+            return f"IF {self.selector} IN {tuple(vals)}"
         else:
             return f"IF {self.selector} IN ('{vals[0]}', '{vals[1]}', ..., '{vals[-2]}', '{vals[-1]}')"
 
