@@ -127,11 +127,6 @@ class AbstractTelescope(models.Model):
     def make_request(self, observation: Observation) -> None:
         raise NotImplementedError()
 
-    def repoint(
-        self, current_observation: Observation, proposed_observation: Observation
-    ) -> bool:
-        raise NotImplementedError()
-
     def check_override(
         self, current_observation: Observation, proposed_observation: Observation
     ) -> None:
