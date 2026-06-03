@@ -116,13 +116,15 @@ class Topic(models.Model):
     Notices from this topic are parsed as XML or JSON.
     """
 
+    class Meta:
+        unique_together = ("name", "stream")
+
     class Format(models.TextChoices):
         XML = ("xml", "XML")
         JSON = ("json", "JSON")
 
     name = models.CharField(
         max_length=500,
-        unique=True,
         help_text="The topic name as set by the Kafka message broker. e.g. <code>gcn.notices.svom.voevent.eclairs</code>",
     )
     stream = models.ForeignKey(
