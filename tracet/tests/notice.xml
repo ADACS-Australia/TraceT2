@@ -1,0 +1,76 @@
+<voe:VOEvent xmlns:voe="http://www.ivoa.net/xml/VOEvent/v2.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.ivoa.net/xml/VOEvent/v2.0 http://www.ivoa.net/xml/VOEvent/VOEvent-v2.0.xsd" role="observation" version="2.0" ivorn="ivo://org.svom/fsc#sb26051616_eclairs-wakeup">
+  <Who>
+    <AuthorIVORN>ivo://org.svom/fsc</AuthorIVORN>
+    <Date>2026-05-16T20:53:33+00:00</Date>
+    <Author>
+      <title>SVOM French Science Center</title>
+      <shortName>FSC</shortName>
+      <contactName>Henri Louvin</contactName>
+      <contactEmail>svom-contact@cea.fr</contactEmail>
+    </Author>
+  </Who>
+  <What>
+    <Param name="Packet_Type" value="202" ucd="meta.id"/>
+    <Param name="Pkt_Ser_Num" value="1" ucd="meta.id"/>
+    <Param name="Instrument" value="ECLAIRs" ucd="instr"/>
+    <Group name="Svom_Identifiers">
+      <Param name="Notice_Level" value="N1e" ucd="meta.id"/>
+      <Param name="Burst_Id" value="{event_id}" ucd="meta.id"/>
+      <Param name="Alert_Seq_T0" value="2026-05-16T20:39:50.410Z" ucd="time.start"/>
+    </Group>
+    <Group name="Detection_Info">
+      <Param name="SNR" value="6.73" unit="sigma" ucd="stat.snr"/>
+      <Param name="Timescale" value="81.92" unit="s" ucd="time.interval"/>
+      <Param name="Time_Window_Start" value="2026-05-16T20:38:28.490Z" ucd="time.start"/>
+      <Param name="Time_Window_End" value="2026-05-16T20:39:50.410Z" ucd="time.end"/>
+      <Param name="Lower_Energy_Bound" value="5" unit="keV" ucd="em.energy"/>
+      <Param name="Upper_Energy_Bound" value="20" unit="keV" ucd="em.energy"/>
+      <Param name="Trigger_Type" value="IMT" ucd="instr.param"/>
+    </Group>
+    <Group name="Target_Info">
+      <Param name="Galactic_Lon" value="12.47" unit="deg" ucd="pos.galactic.lon"/>
+      <Param name="Galactic_Lat" value="45.91" unit="deg" ucd="pos.galactic.lat"/>
+      <Param name="Moon_Angle" value="149.54" unit="deg" ucd="pos.angdistance"/>
+      <Param name="Sun_Angle" value="154.46" unit="deg" ucd="pos.angdistance"/>
+    </Group>
+    <Group name="Satellite_Info">
+      <Param name="Slew_Status" value="not-requested" ucd="meta.code.status"/>
+      <Param name="Attitude_Ra" value="203.19" unit="deg" ucd="instr.param"/>
+      <Param name="Attitude_Dec" value="16.81" unit="deg" ucd="instr.param"/>
+      <Param name="Attitude_Roll" value="40.74" unit="deg" ucd="instr.param"/>
+    </Group>
+    <Group name="Misc_Flags">
+      <Param name="Near_Bright_Star" value="false"/>
+      <Param name="Flt_Generated" value="true"/>
+      <Param name="Gnd_Generated" value="false"/>
+    </Group>
+  </What>
+  <WhereWhen>
+    <ObsDataLocation>
+      <ObservatoryLocation id="GEOLEO"/>
+      <ObservationLocation>
+        <AstroCoordSystem id="UTC-ICRS-GEO"/>
+        <AstroCoords coord_system_id="UTC-ICRS-GEO">
+          <Time unit="s">
+            <TimeInstant>
+              <ISOTime>{event_time}</ISOTime>
+            </TimeInstant>
+          </Time>
+          <Position2D unit="deg">
+            <Name1>RA</Name1>
+            <Name2>Dec</Name2>
+            <Value2>
+              <C1>233.8488</C1>
+              <C2>6.3726</C2>
+            </Value2>
+            <Error2Radius>0.1937</Error2Radius>
+          </Position2D>
+        </AstroCoords>
+      </ObservationLocation>
+    </ObsDataLocation>
+  </WhereWhen>
+  <How>
+    <Description>N1e notice, data from ECLAIRs</Description>
+    <Reference uri="https://www.svom.eu/en/telescope-eclairs-en/"/>
+  </How>
+</voe:VOEvent>

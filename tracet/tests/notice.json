@@ -1,0 +1,29 @@
+{
+    "$schema": "https://gcn.nasa.gov/schema/main/gcn/notices/chime/frb.schema.json",
+    "trigger_time": "2026-06-01T20:24:06.914421",
+    "id": "1164852195",
+    "snr": 13.0272169,
+    "ra": 71.82861,
+    "dec": 77.5123739,
+    "ra_dec_error": [
+        2.2329272,
+        2.2329272,
+        0
+    ],
+    "dm": 1285.5058594,
+    "dm_error": 0.4043743,
+    "dm_gal_ne_2001_max": 73.4919715,
+    "trigger_time_inf_freq": "2026-06-01 20:23:33.576613+00:00",
+    "trigger_time_inf_freq_error": 0.013108099559195993,
+    "importance": 0.9998662524251213,
+    "sampling_time": 0.983,
+    "spectral_band": [
+        400.0,
+        800.0
+    ],
+    "spectral_band_units": "MHz",
+    "npol": 2,
+    "tsys": 50.0,
+    "alert_type": "initial",
+    "description": "This alert was generated automatically by the CHIME/FRB Real-time Search Pipeline."
+}
