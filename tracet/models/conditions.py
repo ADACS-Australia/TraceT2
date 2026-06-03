@@ -61,7 +61,7 @@ class NumericRangeCondition(models.Model):
 
             if self.val1 <= float(val) < self.val2:
                 return Factor(condition=str(self), vote=self.if_true)
-        except ValueError as e:
+        except TypeError, ValueError:
             # Unable to convert to float
             return Factor(condition=str(self))
 
@@ -89,7 +89,7 @@ class BooleanCondition(models.Model):
 
             if truthy(val):
                 return Factor(condition=str(self), vote=self.if_true)
-        except ValueError as e:
+        except TypeError, ValueError:
             # Unable to convert to boolean
             return Factor(condition=str(self))
 
@@ -129,7 +129,7 @@ class EqualityCondition(models.Model):
             val = str(val)
             if val in self.get_vals():
                 return Factor(condition=str(self), vote=self.if_true)
-        except ValueError as e:
+        except TypeError, ValueError:
             # Unable to convert to string
             return Factor(condition=str(self))
 
