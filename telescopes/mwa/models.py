@@ -79,11 +79,7 @@ class MWABase(AbstractTelescope):
     )
 
     def check_override(self, current_observation, proposed_observation):
-        super().check_override(current_observation, proposed_observation)
-
-        # Default implementation for all MWA telescopes
-        # Return true if any of the proposed pointings is > repointing_threshold from
-        # an existing pointing.
+        # MWA has special case for equal priority overrides
         if current_observation.priority == proposed_observation.priority:
             maxsep = max(
                 min(c0.separation(c1) for c1 in current_observation.pointings).deg
@@ -101,8 +97,11 @@ class MWABase(AbstractTelescope):
                 self.log(
                     "Repointing threshold exceeded",
                     f"The proposed pointing is at most {maxsep} degrees apart from the current pointing, "
-                    f"and this exceed the repointing threshold ({self.repointing_threshold}).",
+                    f"and this exceeds the repointing threshold ({self.repointing_threshold}).",
                 )
+        else:
+            # Otherwise, use standard control flow for priority
+            super().check_override(current_observation, proposed_observation)
 
 
 class MWACorrelator(MWABase):
@@ -123,7 +122,7 @@ class MWACorrelator(MWABase):
             ra = event.querylatest(self.ra_path, createdbefore)
             dec = event.querylatest(self.dec_path, createdbefore)
             return [SkyCoord(float(ra), float(dec), unit=("deg", "deg"))]
-        except (TypeError, ValueError):
+        except TypeError, ValueError:
             return []
 
     def prepare_request(self, observation: Observation):
@@ -189,7 +188,7 @@ class MWAVCS(MWABase):
             ra = event.querylatest(self.ra_path, createdbefore)
             dec = event.querylatest(self.dec_path, createdbefore)
             return [SkyCoord(float(ra), float(dec), unit=("deg", "deg"))]
-        except (TypeError, ValueError):
+        except TypeError, ValueError:
             return []
 
     def prepare_request(self, observation: Observation):
@@ -308,7 +307,7 @@ class MWAGW(MWABase):
                 f"skymap={url} index={index}",
             )
             skymap = fits.open(BytesIO(requests.get(url).content))[int(index)].data
-        except (ValueError, ValidationError):
+        except ValueError, ValidationError:
             self.log(
                 "Skymap isn't a URL; assuming it is an embedded FITS object encoded as Base64",
                 f"skymap={skymap}",
