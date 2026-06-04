@@ -1,7 +1,7 @@
 import datetime
 import logging
 from typing import Optional
-from warnings import deprecated
+from urllib import parse as urlparse
 
 from astropy.coordinates import SkyCoord
 import dateutil
@@ -165,12 +165,13 @@ class Event(models.Model):
         return f"Event(Trigger={self.trigger.id} EventID={self.eventid})"
 
     def get_absolute_url(self):
+        encoded = urlparse.quote(self.eventid)
         return (
             self.trigger.get_absolute_url()
             + "?eventid="
-            + self.eventid
+            + encoded
             + "#eventid-"
-            + self.eventid
+            + encoded
         )
 
     def querylatest(self, query, createdbefore=None):
