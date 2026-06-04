@@ -44,7 +44,7 @@ class Trigger(models.Model):
     user = models.ForeignKey(
         get_user_model(), related_name="triggers", on_delete=models.CASCADE
     )
-    created = models.DateField(default=timezone.now)
+    created = models.DateField(auto_now_add=True)
     priority = models.IntegerField(default=0)
     active = models.BooleanField(
         default=False,
