@@ -144,22 +144,24 @@ class MWACorrelator(MWABase):
         self.log("API params", json.dumps(self.api_params, indent=4))
 
     def make_request(self, observation: Observation):
+        response_data = None
         try:
             response = requests.get(
                 "http://mro.mwa128t.org/trigger/triggerobs", params=self.api_params
             )
             response.raise_for_status()
 
-            response = json.loads(response.text)
-            self.log("Pretty API response", json.dumps(response, indent=4))
+            response_data = json.loads(response.text)
+            self.log("Pretty API response", json.dumps(response_data, indent=4))
         except requests.RequestException as e:
             self.log("An error occurred making the HTTP request to the MWA API", e)
             raise AbstractTelescope.RequestException() from e
         except (json.JSONDecodeError, UnicodeDecodeError) as e:
             self.log("Raw API response", response.text)
             self.log("The MWA API returned invalid JSON", e)
+            raise AbstractTelescope.RequestException()
 
-        if response.get("success", False):
+        if isinstance(response_data, dict) and response_data.get("success", False):
             observation.finish = datetime.datetime.now(
                 datetime.UTC
             ) + datetime.timedelta(
@@ -210,22 +212,24 @@ class MWAVCS(MWABase):
         self.log("API params", json.dumps(self.api_params, indent=4))
 
     def make_request(self, observation: Observation):
+        response_data = None
         try:
             response = requests.get(
                 "http://mro.mwa128t.org/trigger/triggervcs", params=self.api_params
             )
             response.raise_for_status()
 
-            response = json.loads(response.text)
-            self.log("Pretty API response", json.dumps(response, indent=4))
+            response_data = json.loads(response.text)
+            self.log("Pretty API response", json.dumps(response_data, indent=4))
         except requests.RequestException as e:
             self.log("An error occurred making the HTTP request to the MWA API", e)
             raise AbstractTelescope.RequestException() from e
         except (json.JSONDecodeError, UnicodeDecodeError) as e:
             self.log("Raw API response", response.text)
             self.log("The MWA API returned invalid JSON", e)
+            raise AbstractTelescope.RequestException()
 
-        if response.get("success", False):
+        if isinstance(response_data, dict) and response_data.get("success", False):
             observation.finish = datetime.datetime.now(
                 datetime.UTC
             ) + datetime.timedelta(
@@ -407,39 +411,43 @@ class MWAGW(MWABase):
             self.dumpbuffer = False
 
     def make_request(self, observation: Observation):
+        # We make a best effort to dump the buffer.
+        # If this fails, we proceed nonetheless to schedule an observation.
         if self.dumpbuffer:
             try:
-                response = requests.get(
+                buffer_response = requests.get(
                     "http://mro.mwa128t.org/trigger/triggerbuffer",
                     params=self.bufferdump_params,
                 )
-                response.raise_for_status()
+                buffer_response.raise_for_status()
 
-                response = json.loads(response.text)
-                self.log("Buffer dump API response", json.dumps(response, indent=4))
+                buffer_data = json.loads(buffer_response.text)
+                self.log("Buffer dump API response", json.dumps(buffer_data, indent=4))
             except requests.RequestException as e:
                 self.log("An error occurred making the HTTP request to the MWA API", e)
                 # Don't throw RequestException: still try to schedule VCS observation
             except (json.JSONDecodeError, UnicodeDecodeError) as e:
-                self.log("Raw API response", response.text)
-                self.log("The MWA API returned invalid JSON", e)
+                self.log("Raw buffer dump API response", response.text)
+                self.log("The MWA buffer dump API returned invalid JSON", e)
 
+        response_data = None
         try:
             response = requests.get(
                 "http://mro.mwa128t.org/trigger/triggervcs", params=self.api_params
             )
             response.raise_for_status()
 
-            response = json.loads(response.text)
-            self.log("Pretty API response", json.dumps(response, indent=4))
+            response_data = json.loads(response.text)
+            self.log("Pretty API response", json.dumps(response_data, indent=4))
         except requests.RequestException as e:
             self.log("An error occurred making the HTTP request to the MWA API", e)
             raise AbstractTelescope.RequestException() from e
         except (json.JSONDecodeError, UnicodeDecodeError) as e:
             self.log("Raw API response", response.text)
             self.log("The MWA API returned invalid JSON", e)
+            raise AbstractTelescope.RequestException()
 
-        if response.get("success", False):
+        if isinstance(response_data, dict) and response_data.get("success", False):
             observation.finish = datetime.datetime.now(
                 datetime.UTC
             ) + datetime.timedelta(
