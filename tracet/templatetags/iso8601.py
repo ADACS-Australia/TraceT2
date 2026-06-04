@@ -7,11 +7,11 @@ register = template.Library()
 
 @register.filter(expects_localtime=True)
 def iso8601(dt):
-    if type(dt) is not datetime.datetime:
+    if not isinstance(dt, datetime.datetime):
         return ""
 
     if dt.microsecond >= 500_000:
-        dt += datetime.timedelta(seconds=1)
+        dt = dt + datetime.timedelta(seconds=1)
     return (
         dt.replace(microsecond=0)
         .astimezone(datetime.UTC)
