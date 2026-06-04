@@ -117,9 +117,6 @@ class Trigger(models.Model):
             .first()
         )
 
-    def get_recent_events(self, n=5):
-        return self.events.order_by("-time")[:5]
-
 
 class Event(models.Model):
     """
