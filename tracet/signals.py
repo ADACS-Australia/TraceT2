@@ -50,10 +50,6 @@ def on_trigger_save(sender, instance, created, **kwargs):
     # Build the associated list of events, taking into account any changes topic/eventid
     resync_events(trigger)
 
-    # Set or update (where Trigger.time_path has changed) event time
-    for event in trigger.events.all():
-        event.updatetime()
-
 
 @receiver(m2m_changed, sender=models.Trigger.topics.through)
 def on_trigger_topics_changed(sender, instance, pk_set, action, reverse, **kwargs):
