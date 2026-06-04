@@ -32,7 +32,8 @@ class ExpirationCondition:
 
         if (
             decision.event.time  # check that event time is set!
-            and decision.created - decision.event.time <= datetime.timedelta(minutes=self.expiration)
+            and decision.created - decision.event.time
+            <= datetime.timedelta(minutes=self.expiration)
         ):
             return Factor(condition=condition, vote=Vote.PASS)
         else:
