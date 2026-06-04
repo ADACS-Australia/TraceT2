@@ -1,4 +1,4 @@
-from django.db import models
+from django.db import models, transaction
 from django.utils import timezone
 from django.utils.html import escape
 from django.utils.safestring import SafeText, mark_safe
@@ -56,33 +56,33 @@ class Decision(models.Model):
     source = models.CharField(choices=Source)
 
     def save(self, *args, **kwargs):
-        res = super().save(*args, **kwargs)
+        with transaction.atomic():
+            res = super().save(*args, **kwargs)
+            self.factors.all().delete()
 
-        self.factors.all().delete()
+            # Attach all factors
+            notices = list(
+                self.event.notices.filter(received__lte=self.created).order_by("received")
+            )
 
-        # Attach all factors
-        notices = list(
-            self.event.notices.filter(received__lte=self.created).order_by("received")
-        )
+            if len(notices) == 0:
+                factors = [Factor(condition="Event contains no notices", vote=Vote.FAIL)]
+            else:
+                conditions = self.event.trigger.get_conditions()
 
-        if len(notices) == 0:
-            factors = [Factor(condition="Event contains no notices", vote=Vote.FAIL)]
-        else:
-            conditions = self.event.trigger.get_conditions()
+                # Initialize factors list with oldest notice
+                notice = notices.pop(0)
+                factors = [c.vote(notice, self) for c in conditions]
 
-            # Initialize factors list with oldest notice
-            notice = notices.pop(0)
-            factors = [c.vote(notice, self) for c in conditions]
+                # Append all additional factors from remaining notices
+                for notice in notices:
+                    for i, c in enumerate(conditions):
+                        # The following + is doing a lot!
+                        #   - Indeterminate votes (== None) will inherit most recent non-null Factor
+                        #   - Otherwise, we give precedence to the most recent Factor
+                        factors[i] += c.vote(notice, self)
 
-            # Append all additional factors from remaining notices
-            for notice in notices:
-                for i, c in enumerate(conditions):
-                    # The following + is doing a lot!
-                    #   - Indeterminate votes (== None) will inherit most recent non-null Factor
-                    #   - Otherwise, we give precedence to the most recent Factor
-                    factors[i] += c.vote(notice, self)
-
-        self.factors.add(*factors, bulk=False)
+            self.factors.add(*factors, bulk=False)
 
         # If this is a real decision and it's a PASS, trigger observations
         # Manually triggered observations will run if only a MAYBE
