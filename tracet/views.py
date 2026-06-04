@@ -203,7 +203,7 @@ class TriggerBase(View):
         else:
             self.trigger = None
 
-        post = request.POST if request.POST else None
+        post = request.POST if request.method == "POST" else None
         user = get_user(request) if self.trigger is None else self.trigger.user
 
         self.forms = dict(
