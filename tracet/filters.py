@@ -11,7 +11,7 @@ class BooleanWidget(django.forms.Select):
     """
 
     def __init__(self, attrs=None):
-        choices = (("", ("------")), ("true", ("Yes")), ("false", ("No")))
+        choices = (("", "------"), ("true", "Yes"), ("false", "No"))
         super().__init__(attrs, choices)
 
     def render(self, name, value, attrs=None, renderer=None):
