@@ -98,9 +98,9 @@ class Command(BaseCommand):
 
                     try:
                         error_status = f"Error ({message.error().str()})"
-                        Topic.objects.filter(stream=stream, name=message.topic()).update(
-                            status=error_status
-                        )
+                        Topic.objects.filter(
+                            stream=stream, name=message.topic()
+                        ).update(status=error_status)
                     except Exception as e:
                         logger.error(
                             "Tried and failed to record Kafka error message",
