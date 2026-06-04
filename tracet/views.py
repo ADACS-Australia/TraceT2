@@ -4,7 +4,7 @@ import logging
 
 from django.core.cache import cache
 from django.core.exceptions import PermissionDenied
-from django.core.paginator import EmptyPage, Paginator
+from django.core.paginator import Paginator
 from django.contrib import messages
 from django.contrib.auth import get_user
 from django.forms import modelformset_factory, inlineformset_factory, BaseInlineFormSet
@@ -106,11 +106,7 @@ class ObservationList(View):
         paginator = Paginator(filter.qs, 100)
         pagenumber = request.GET.get("page", 1)
 
-        try:
-            observations = paginator.page(pagenumber)
-        except EmptyPage:
-            # If out of range, display last page
-            observations = paginator.page(paginator.num_pages)
+        observations = paginator.get_page(pagenumber)
 
         return render(
             request,
