@@ -14,8 +14,8 @@ logger = logging.getLogger(__name__)
 
 
 class PrettyJSONEncoder(json.JSONEncoder):
-    def __init__(self, *args, indent, sort_keys, **kwargs):
-        super().__init__(*args, indent=4, sort_keys=True, **kwargs)
+    def __init__(self, *args, indent=4, sort_keys=True, **kwargs):
+        super().__init__(*args, indent=indent, sort_keys=sort_keys, **kwargs)
 
 
 class Stream(models.Model):
