@@ -330,8 +330,10 @@ This will launch all 3 services associated with the production profile. TRACE-T 
 
 > **Note:** An internet-facing service will need to forward incoming traffic from ports 80 and 443 to Caddy on 8000 and 8443, respectively. Configuring this will differ based on operating system. For reference, using `iptables`:
 >
->     sudo iptables -A PREROUTING -p tcp -m tcp --dport 80 -j REDIRECT --to-ports 8000
->     sudo iptables -A PREROUTING -p tcp -m tcp --dport 443 -j REDIRECT --to-ports 8443
+>     sudo iptables -t nat -A PREROUTING -p tcp -m tcp --dport 80 -j REDIRECT --to-ports 8000
+>     sudo iptables -t nat -A PREROUTING -p tcp -m tcp --dport 443 -j REDIRECT --to-ports 8443
+>
+> To ensure these rules remain in effect between restarts, you should install the package `iptables-persistent` and its associated command `iptables-save`.
 
 For development purposes, one can run:
 
