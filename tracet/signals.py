@@ -2,6 +2,7 @@ import logging
 
 from django.conf import settings
 from django.core.mail import send_mail
+from django.db import transaction
 from django.db.models.signals import post_save, m2m_changed
 from django.dispatch import receiver
 from django.template.loader import render_to_string
@@ -13,27 +14,28 @@ logger = logging.getLogger(__name__)
 
 
 def resync_events(trigger: models.Trigger):
-    # First, set all events to disabled
-    trigger.events.update(disabled=True)
+    with transaction.atomic():
+        # First, set all events to disabled
+        trigger.events.update(disabled=True)
 
-    # Remove notices from events: we'll add them back again with the updated topic criteria
-    for event in trigger.events.all():
-        event.notices.clear()
+        # Remove notices from events: we'll add them back again with the updated topic criteria
+        for event in trigger.events.all():
+            event.notices.clear()
 
-    # And delete all simulated decisions
-    models.Decision.objects.filter(
-        event__trigger__id=trigger.id, source=models.Decision.Source.SIMULATED
-    ).delete()
+        # And delete all simulated decisions
+        models.Decision.objects.filter(
+            event__trigger__id=trigger.id, source=models.Decision.Source.SIMULATED
+        ).delete()
 
-    # Create events that match the topic and eventid criteria
-    for notice in models.Notice.objects.filter(topic__in=trigger.topics.all()).order_by(
-        "-created"
-    ):
-        trigger.get_or_create_event(notice)
+        # Create events that match the topic and eventid criteria
+        for notice in models.Notice.objects.filter(
+            topic__in=trigger.topics.all()
+        ).order_by("-created"):
+            trigger.get_or_create_event(notice)
 
-    # Set of update event time
-    for event in models.Event.objects.filter(trigger_id=trigger.id):
-        event.updatetime()
+        # Set or update event time
+        for event in models.Event.objects.filter(trigger_id=trigger.id):
+            event.updatetime()
 
 
 @receiver(post_save, sender=models.Trigger)
