@@ -163,6 +163,10 @@ class TriggerList(View):
         )
 
     def post(self, request):
+        user = get_user(request)
+        if not user.has_perm("tracet.admin_triggers"):
+            raise PermissionDenied("You do not have permission to manage triggers.")
+
         activetriggers = self.TriggerFormset(request.POST, prefix="activetriggers")
         inactivetriggers = self.TriggerFormset(request.POST, prefix="inactivetriggers")
 
