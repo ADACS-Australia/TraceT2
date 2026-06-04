@@ -1,5 +1,6 @@
 import threading
 
+
 def truthy(val) -> bool:
     # Bool
     if isinstance(val, bool):
@@ -8,7 +9,7 @@ def truthy(val) -> bool:
     # Int/Floats 0 -> False, rest -> True
     try:
         return bool(float(val))
-    except (ValueError, TypeError):
+    except ValueError, TypeError:
         pass
 
     # String values
