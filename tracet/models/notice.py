@@ -54,17 +54,23 @@ class Notice(models.Model):
                 return rootnode.xpath(path, namespaces=rootnode.nsmap)[0]
             elif self.topic.type == "json":
                 return jsonpath.find(path, json.loads(self.payload))[0].value
-        except (etree.XPathEvalError, jsonpath.JSONPathSyntaxError) as e:
-            logging.warning("A XPath/JSONPath query failed", exc_info=e)
-            return None
         except IndexError:
             # In the case that no value is found at the path, we return None
             return None
+        except Exception as e:
+            # Failure can occur if:
+            # 1. The query string is invalid, or
+            # 2. The payload is not valid
+            logger.warning("A XPath/JSONPath query failed", exc_info=e)
+            return None
 
     def pretty_payload(self):
-        if self.topic.type == "xml":
-            return etree.tostring(
-                etree.parse(io.BytesIO(self.payload)), pretty_print=True
-            ).decode()
-        elif self.topic.type == "json":
-            return json.dumps(json.loads(self.payload), indent=4)
+        try:
+            if self.topic.type == "xml":
+                return etree.tostring(
+                    etree.parse(io.BytesIO(self.payload)), pretty_print=True
+                ).decode()
+            elif self.topic.type == "json":
+                return json.dumps(json.loads(self.payload), indent=4)
+        except etree.XMLSyntaxError, json.JSONDecodeError:
+            return f"(Error: the payload is not valid {self.topic.type})"
