@@ -1,7 +1,6 @@
 import datetime
 
 from django import template
-from django.core.cache import cache
 from django.utils.safestring import mark_safe
 
 from tracet.models import Stream
