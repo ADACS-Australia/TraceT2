@@ -48,7 +48,13 @@
 
 <h2>Telescope</h2>
 
-{{ trigger.get_telescope.summary }}
+{% with telescope=trigger.get_telescope %}
+    {% if telescope %}
+        {{ telescope.summary }}
+    {% else %}
+        <p>There is no telescope configured for this trigger.</p>
+    {% endif %}
+{% endwith %}
 
 <hr>
 
