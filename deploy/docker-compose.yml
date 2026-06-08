@@ -37,6 +37,12 @@ services:
   caddy:
     profiles: ["prod"]
     image: docker.io/library/caddy:latest
+    entrypoint: ["/bin/sh", "-c"]
+    command:
+      - |
+        HOSTNAME=$$(echo "$$BASEURL" | awk -F'[/:]' '{print $$4}')
+        export HOSTNAME
+        exec caddy run --config /etc/caddy/Caddyfile --adapter caddyfile
     env_file: "secrets.env"
     ports:
       - "8000:80"
