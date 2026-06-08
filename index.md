@@ -22,6 +22,7 @@ Internally, TRACE-T handles transient notices using the following chain of event
 1. A new notice is received by TRACE-T.
 2. Each _active_ ruleset, known as a [_trigger_](#triggers), is offered the chance to react to the notice _in order of priority_.
 3. If a trigger subscribes to the notice's associated topic **and** the trigger's set of conditions all `PASS` (possibly using [condition inheritance](#Condition-inheritance)), **then** the trigger will attempt to make an observation.
+4. An alert email will be sent to the trigger owner upon any observation attempt.
 
 There are a few complicating factors to be aware of:
 
@@ -386,10 +387,10 @@ On a new installation, the following environment variables must be present:
    print(get_random_secret_key())
 * `SMTP_HOST`, `SMTP_PORT`, `SMTP_USER`, `SMTP_PASSWORD`: These fields are required by Django to send emails using an SMTP proxy. For example, it is possible to configure a Gmail account to function as an SMTP proxy by generating an "application password", in which case case the respective values are: `smtp.gmail.com`, `587`, `<email@gmail.com>`, `<password>`.
 * `KAFKA_GROUP_ID`: This field is required by the background listener. It is an arbitrary identification name that is used by the Kafka service to track which notices have already been delivered and acknowledged. This can be set to anything so long as it is unique, for example, the domain name of your TRACE-T instance. Changing this will cause Kafka to resend a backlog of notices; TRACE-T will ignore those that it has already recorded.
+* `BASEURL`: This is the base URL used to configure Django, the Caddy webserver, and will be used to form URLs in outgoing emails. It should include the protocol (e.g. http:// or https://), the domain, and optionally any non-standard port or subdirectory. For example, during local testing you can set this to "http://localhost:8123/" or in production as "https://tracet.domain.org". Note, however, that the production profile always assumes https:// running on the standard port 443.
 
-Optionally, one can specify the following keys:
+Optionally, one can specify the following:
 
-* `HOSTNAME`: This sets the hostname and is required when run in production, i.e. with `--profile=prod`. `HOSTNAME` is used by Caddy to request an SSL certificate and is used by Django to whitelist allowed domains. Omit any leading protocol, i.e. use "TRACE-T.domain.org", _not_ "https://TRACE-T.domain.org".
 * `DJANGO_DEBUG`: When set to true, run Django in debug mode. This should never be set in production environments and defaults to false.
 
 ## Appendix
