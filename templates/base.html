@@ -1,4 +1,5 @@
 {% extends "skeleton.html" %}
+{% load rules %}
 {% load stream_status %}
 {% load static %}
 
@@ -29,6 +30,10 @@
                             <li><a href="{% url 'observations' %}">View all observations</a></li>
                         </ul>
                     </li>
+                    {% has_perm "tracet.admin_triggers" user as can_admin_triggers %}
+                    {% if can_admin_triggers %}
+                        <li><a href="{% url 'admin:index' %}">Admin</a></li>
+                    {% endif %}
                     <li>
                         <a href="https://adacs-australia.github.io/TraceT2/" target="_blank">
                             Help<i id="help-link" class="fa-solid fa-arrow-up-right-from-square"></i>
