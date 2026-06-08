@@ -4,6 +4,7 @@ import jsonpath_rfc9535 as jsonpath
 from lxml import etree
 
 from django import forms
+from django.db.models import Q
 from django.contrib.auth import get_user_model
 from django.utils.safestring import mark_safe
 
@@ -26,6 +27,21 @@ class Trigger(forms.ModelForm):
     topics = forms.ModelMultipleChoiceField(
         models.Topic.objects, validators=[validators.unique_topic_format(pk="id")]
     )
+
+    class Meta:
+        model = models.Trigger
+        fields = ["name", "user", "topics", "eventid_path", "time_path", "expiry"]
+        widgets = {"expiry": forms.NumberInput(attrs={"autocomplete": "off"})}
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+
+        # Override the queryset for topics to ensure topics are displayed only if:
+        # 1. The topic is enabled, OR
+        # 2. The trigger already subscribes to the topic
+        self.fields["topics"].queryset = models.Topic.objects.filter(
+            Q(enabled=True) | Q(trigger=self.instance)
+        ).distinct()
 
     def clean(self):
         super().clean()
@@ -65,11 +81,6 @@ class Trigger(forms.ModelForm):
         except etree.XPathEvalError, jsonpath.JSONPathSyntaxError:
             # This is handled by the field validation
             pass
-
-    class Meta:
-        model = models.Trigger
-        fields = ["name", "user", "topics", "eventid_path", "time_path", "expiry"]
-        widgets = {"expiry": forms.NumberInput(attrs={"autocomplete": "off"})}
 
 
 class NumericRangeCondition(forms.ModelForm):
