@@ -167,6 +167,18 @@ On each trigger's listing of events, you will observe the condition results bein
 
 ![image](index/notices.png)
 
+## Email alerts
+
+Email alerts will be sent to trigger owners whenever a decision is made under the following conditions:
+
+* The trigger is active
+* The trigger has a configured telescope
+* The decision resolved to `PASS` or `MAYBE`
+
+The email will report on any attempted observations, including failed attempts, and provide a link to the associated event.
+
+The aim of these alerts is two-fold. In the case of a failed observation, this gives the trigger owner a chance re-trigger in the hope that the observation request will succeed. And in the case of a `MAYBE` decision, this timely notification gives the trigger owner the option to manually trigger and thereby promote the `MAYBE` to a `PASS`.
+
 ## Administration
 
 Site administration actions can be performed by any user that has both of the following attributes:
