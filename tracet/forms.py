@@ -25,7 +25,8 @@ class Trigger(forms.ModelForm):
         get_user_model().objects, disabled=True, widget=forms.HiddenInput
     )
     topics = forms.ModelMultipleChoiceField(
-        models.Topic.objects, validators=[validators.unique_topic_format(pk="id")]
+        models.Topic.objects.filter(enabled=True),
+        validators=[validators.unique_topic_format(pk="id")],
     )
 
     class Meta:
@@ -39,9 +40,10 @@ class Trigger(forms.ModelForm):
         # Override the queryset for topics to ensure topics are displayed only if:
         # 1. The topic is enabled, OR
         # 2. The trigger already subscribes to the topic
-        self.fields["topics"].queryset = models.Topic.objects.filter(
-            Q(enabled=True) | Q(trigger=self.instance)
-        ).distinct()
+        if self.instance.id:
+            self.fields["topics"].queryset = models.Topic.objects.filter(
+                Q(enabled=True) | Q(trigger=self.instance)
+            ).distinct()
 
     def clean(self):
         super().clean()
