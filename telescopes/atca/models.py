@@ -6,7 +6,7 @@ import requests
 
 from django.db import models
 
-from tracet.fields import JXPathField
+from tracet.fields import EncryptedTextField, JXPathField
 from tracet.models import AbstractTelescope, Observation
 
 
@@ -21,7 +21,7 @@ class ATCA(AbstractTelescope):
     email = models.EmailField(
         help_text="The email address that was supplied in the NAPA proposal."
     )
-    authentication_token = models.CharField(max_length=500)
+    authentication_token = EncryptedTextField(null=True)
     ra_path = JXPathField(
         help_text="The (x|j)path to the Right Ascension. This value is set by the most recent matching notice.",
     )

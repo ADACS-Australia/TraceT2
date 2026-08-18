@@ -17,7 +17,7 @@ RemainAfterExit=yes
 WorkingDirectory=/home/debian/TraceT/deploy
 
 ExecStart=/usr/bin/podman compose --profile prod build
-ExecStart=/usr/bin/podman compose --profile prod run gunicorn bash -c "uv run ./manage.py migrate --noinput"
+ExecStart=/usr/bin/podman compose --profile prod run gunicorn bash -c "uv run --env-file deploy/secrets.env ./manage.py migrate --noinput"
 ExecStart=/usr/bin/podman compose --profile prod run gunicorn bash -c "uv run ./manage.py collectstatic --clear --noinput"
 
 # Migrations may take a long time: thus we extend the timeout to 10 minutes

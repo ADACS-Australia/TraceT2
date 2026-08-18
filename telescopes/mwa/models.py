@@ -20,7 +20,7 @@ from django.core.validators import URLValidator
 from django.db import models
 from django.utils.safestring import mark_safe
 
-from tracet.fields import JXPathField
+from tracet.fields import EncryptedTextField, JXPathField
 from tracet.models import AbstractTelescope, Observation
 
 
@@ -43,7 +43,7 @@ class MWABase(AbstractTelescope):
     SUMMARY_TEMPLATE = "mwa/mwabase-summary.html"
 
     projectid = models.CharField(max_length=500)
-    secure_key = models.CharField(max_length=500)
+    secure_key = EncryptedTextField(null=True)
     repointing_threshold = models.FloatField(
         help_text=(
             "In the case that an observation has already been requested, request a new observation "
