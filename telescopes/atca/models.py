@@ -123,7 +123,8 @@ class ATCA(AbstractTelescope):
             )
             response.raise_for_status()
         except requests.RequestException as e:
-            self.log("An error occurred making the HTTP request to the ATCA API", e)
+            status_code = e.response.status_code if e.response is not None else "unknown"
+            self.log(f"An error occurred making the HTTP request to the ATCA API (status code: {status_code})")
             raise AbstractTelescope.RequestException() from e
 
         self.log("Raw API response", response.text)

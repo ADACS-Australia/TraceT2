@@ -154,7 +154,8 @@ class MWACorrelator(MWABase):
             response_data = json.loads(response.text)
             self.log("Pretty API response", json.dumps(response_data, indent=4))
         except requests.RequestException as e:
-            self.log("An error occurred making the HTTP request to the MWA API", e)
+            status_code = e.response.status_code if e.response is not None else "unknown"
+            self.log(f"An error occurred making the HTTP request to the MWA API (status code: {status_code})")
             raise AbstractTelescope.RequestException() from e
         except (json.JSONDecodeError, UnicodeDecodeError) as e:
             self.log("Raw API response", response.text)
@@ -222,7 +223,8 @@ class MWAVCS(MWABase):
             response_data = json.loads(response.text)
             self.log("Pretty API response", json.dumps(response_data, indent=4))
         except requests.RequestException as e:
-            self.log("An error occurred making the HTTP request to the MWA API", e)
+            status_code = e.response.status_code if e.response is not None else "unknown"
+            self.log(f"An error occurred making the HTTP request to the MWA API (status code: {status_code})")
             raise AbstractTelescope.RequestException() from e
         except (json.JSONDecodeError, UnicodeDecodeError) as e:
             self.log("Raw API response", response.text)
@@ -424,7 +426,8 @@ class MWAGW(MWABase):
                 buffer_data = json.loads(buffer_response.text)
                 self.log("Buffer dump API response", json.dumps(buffer_data, indent=4))
             except requests.RequestException as e:
-                self.log("An error occurred making the HTTP request to the MWA API", e)
+                status_code = e.response.status_code if e.response is not None else "unknown"
+                self.log(f"An error occurred making the HTTP request to the MWA API (status code: {status_code})")
                 # Don't throw RequestException: still try to schedule VCS observation
             except (json.JSONDecodeError, UnicodeDecodeError) as e:
                 self.log("Raw buffer dump API response", response.text)
@@ -440,7 +443,8 @@ class MWAGW(MWABase):
             response_data = json.loads(response.text)
             self.log("Pretty API response", json.dumps(response_data, indent=4))
         except requests.RequestException as e:
-            self.log("An error occurred making the HTTP request to the MWA API", e)
+            status_code = e.response.status_code if e.response is not None else "unknown"
+            self.log(f"An error occurred making the HTTP request to the MWA API (status code: {status_code})")
             raise AbstractTelescope.RequestException() from e
         except (json.JSONDecodeError, UnicodeDecodeError) as e:
             self.log("Raw API response", response.text)
