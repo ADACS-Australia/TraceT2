@@ -1,0 +1,106 @@
+replicaCount: 1
+
+image:
+  # Override repository for forks: ghcr.io/<your-org>/tracet2
+  repository: ghcr.io/adacs-australia/tracet2
+  tag: ""  # Defaults to Chart appVersion
+  pullPolicy: IfNotPresent
+
+imagePullSecrets: []
+nameOverride: ""
+fullnameOverride: ""
+
+# -- Environment variables (non-sensitive), injected into all containers
+env: {}
+  # BASEURL: "https://tracet2.example.com"
+  # DJANGO_DEBUG: "false"
+  # KAFKA_GROUP_ID: "tracet2"
+  # DATABASE_PATH: "/tracet/data/db.sqlite3"
+  # LOG_DIR: "/tracet/data/logs"
+
+# -- Sensitive environment variables (stored in a Secret)
+# Set via --set or a separate secrets values file
+secret: {}
+  # DJANGO_SECRET_KEY: ""
+  # SMTP_HOST: ""
+  # SMTP_USER: ""
+  # SMTP_PASSWORD: ""
+
+# -- Use an existing secret instead of creating one
+existingSecret: ""
+
+# -- Host header value for health check probes.
+# Must be a hostname that Django's ALLOWED_HOSTS will accept.
+# If empty, defaults to "localhost".
+probeHost: ""
+
+# -- Web (gunicorn) deployment
+web:
+  command: ["uv", "run", "gunicorn", "--bind", "0.0.0.0:8000", "--workers", "3", "project.wsgi"]
+  resources:
+    requests:
+      cpu: 100m
+      memory: 256Mi
+    limits:
+      memory: 512Mi
+
+# -- Kafka listener deployment
+listener:
+  enabled: true
+  command: ["uv", "run", "./manage.py", "listen"]
+  resources:
+    requests:
+      cpu: 50m
+      memory: 128Mi
+    limits:
+      memory: 256Mi
+
+# -- Persistent volume for SQLite database and logs
+persistence:
+  enabled: true
+  storageClass: ""
+  accessMode: ReadWriteOnce
+  size: 1Gi
+  mountPath: /tracet/data
+  existingClaim: ""
+
+service:
+  type: ClusterIP
+  port: 80
+  targetPort: 8000
+
+ingress:
+  enabled: false
+  className: ""
+  annotations: {}
+  hosts: []
+  #  - host: tracet2.example.com
+  #    paths:
+  #      - path: /
+  #        pathType: Prefix
+  tls: []
+  #  - secretName: tracet2-tls
+  #    hosts:
+  #      - tracet2.example.com
+
+serviceAccount:
+  create: true
+  annotations: {}
+  name: ""
+
+podAnnotations: {}
+podLabels: {}
+
+podSecurityContext:
+  seLinuxOptions:
+    type: spc_t
+
+securityContext: {}
+
+nodeSelector: {}
+tolerations: []
+affinity: {}
+
+# -- Run Django migrations as an init container
+migrate:
+  enabled: true
