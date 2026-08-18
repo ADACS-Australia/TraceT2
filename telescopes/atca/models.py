@@ -105,7 +105,7 @@ class ATCA(AbstractTelescope):
         params["request"] = json.dumps(request)
 
         self.api_params = params
-        self.log("API params", json.dumps(self.api_params, indent=4))
+        self.log("API params", json.dumps(self.api_params | {"authenticationToken": "HIDDEN"}, indent=4))
 
     def check_override(self, current_observation, proposed_observation):
         # ATCA observations cannot at present be cancelled and/or repointed

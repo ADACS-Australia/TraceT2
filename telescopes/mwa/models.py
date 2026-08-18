@@ -141,7 +141,7 @@ class MWACorrelator(MWABase):
             tileset=self.tileset,
             pretend=(not self.trigger.active),
         )
-        self.log("API params", json.dumps(self.api_params, indent=4))
+        self.log("API params", json.dumps(self.api_params | {"secure_key": "HIDDEN"}, indent=4))
 
     def make_request(self, observation: Observation):
         response_data = None
@@ -209,7 +209,7 @@ class MWAVCS(MWABase):
             tileset=self.tileset,
             pretend=(not self.trigger.active),
         )
-        self.log("API params", json.dumps(self.api_params, indent=4))
+        self.log("API params", json.dumps(self.api_params | {"secure_key": "HIDDEN"}, indent=4))
 
     def make_request(self, observation: Observation):
         response_data = None
@@ -389,7 +389,7 @@ class MWAGW(MWABase):
             subarrays=["all_ne", "all_nw", "all_se", "all_sw"],
             pretend=(not self.trigger.active),
         )
-        self.log("VCS API params", json.dumps(self.api_params, indent=4))
+        self.log("VCS API params", json.dumps(self.api_params | {"secure_key": "HIDDEN"}, indent=4))
 
         self.bufferdump_params = dict(
             project_id=self.projectid,
@@ -398,7 +398,7 @@ class MWAGW(MWABase):
             start_time=0,  # 0 implies earliest available data
             obstime=10,  # we will immediately trigger a VCS mode
         )
-        self.log("Bufferdump API params", json.dumps(self.bufferdump_params, indent=4))
+        self.log("Bufferdump API params", json.dumps(self.bufferdump_params | {"secure_key": "HIDDEN"}, indent=4))
 
     def check_override(self, current_observation, proposed_observation):
         super().check_override(current_observation, proposed_observation)
