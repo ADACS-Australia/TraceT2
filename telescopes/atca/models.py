@@ -14,54 +14,13 @@ from django.utils.safestring import mark_safe
 
 from tracet.fields import EncryptedTextField, JXPathField
 from tracet.models import AbstractTelescope, Observation
+from telescopes.atca.frequencyconfiguration import FrequencyConfigurationField
 
 
 logger = logging.getLogger(__name__)
 
 
 class ATCA(AbstractTelescope):
-    FREQUENCY_CONFIGURATIONS = {
-        "band_16cm": {
-            "name": "Band 16 cm",
-            "center_freq": 2150,
-            "offset_setting": [-1, -1, -1, 0],
-        },
-        "band_4cm": {
-            "name": "Band 4 cm",
-            "center_freq": 8128,
-            "offset_setting": [160, 160, 480, 480],
-        },
-        "band_15mm": {
-            "name": "Band 15 mm",
-            "center_freq": 19840,
-            "offset_setting": [160, 160, 480, 480],
-        },
-        "band_7mm_low": {
-            "name": "Band 7 mm",
-            "center_freq": 35726,
-            "offset_setting": [160, 160, 480, 480],
-        },
-        "band_7mm_high": {
-            "name": "Band 7 mm",
-            "center_freq": 44428,
-            "offset_setting": [160, 160, 480, 480],
-        },
-    }
-
-    FrequencyConfiguration = models.TextChoices(
-        "FrequencyConfiguration",
-        [
-            (
-                key.upper(),
-                (
-                    key,
-                    f"{conf['name']} ({conf['center_freq']} MHz, offsets={','.join(map(str, conf['offset_setting']))})",
-                ),
-            )
-            for key, conf in FREQUENCY_CONFIGURATIONS.items()
-        ],
-    )
-
     OBSERVATORY = "ATCA"
     CONFIGURATION = ""
     SUMMARY_TEMPLATE = "atca/summary.html"
@@ -74,13 +33,12 @@ class ATCA(AbstractTelescope):
     dec_path = JXPathField(
         help_text="The (x|j)path to the Declination. This value is set by the most recent matching notice.",
     )
-    frequency_configuration = models.CharField(
+    frequency_configuration = FrequencyConfigurationField(
         help_text=mark_safe(
-            "The observation frequency configuration. "
-            "Five preset configurations are provided, with their central frequency and offsets indicated. "
-            "More information is available <a href='https://www.narrabri.atnf.csiro.au/observing/bigcat/bigcat_rf.html'>here</a>"
+            "The observation frequency configuration provided: central frequency [MHz] "
+            "and 4 channel offsets. e.g. '8128 MHz, 160, 160, 480, 480'. More information is available "
+            "<a href='https://www.narrabri.atnf.csiro.au/observing/bigcat/bigcat_rf.html'>here</a>."
         ),
-        choices=FrequencyConfiguration,
     )
     maximum_lag = models.FloatField(
         help_text="The maximum delay allowed for scheduling this observation. If the observation cannot be scheduled to start within this time, it will not be scheduled at all. [minute]",
@@ -150,12 +108,8 @@ class ATCA(AbstractTelescope):
                     "dec": radec.dec.to_string(sep=":"),
                     "correlator_setting": "Continuum",
                     "frequency_configuration": {
-                        "centreFreq": self.FREQUENCY_CONFIGURATIONS[
-                            self.frequency_configuration
-                        ]["center_freq"],
-                        "offset_setting": self.FREQUENCY_CONFIGURATIONS[
-                            self.frequency_configuration
-                        ]["offset_setting"],
+                        "centreFreq": self.frequency_configuration.freq,
+                        "offset_setting": self.frequency_configuration.offsets,
                         "band_setting": "midlow",  # TODO: Temp fix just to get the API working
                     },
                     "integration_time_min": self.maximum_integration,

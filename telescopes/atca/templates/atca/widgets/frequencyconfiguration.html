@@ -1,0 +1,8 @@
+<div class="frequencyconfiguration" style="display:flex; gap:.5rem; align-items:end">
+{% for widget in widget.subwidgets %}
+    <label style="display:flex; flex-direction:column; font-size:.8rem">
+      {% if forloop.first %}Frequency [MHz]{% else %}Offset {{ forloop.counter0 }}{% endif %}
+      {% include widget.template_name %}
+    </label>
+  {% endfor %}
+</div>
