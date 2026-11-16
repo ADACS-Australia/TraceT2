@@ -1,26 +1,72 @@
+import datetime
 import json
+import logging
 
 from astropy.coordinates import SkyCoord
 from astropy.units import hourangle
+from astropy.time import Time
 import requests
 
+from django.core.exceptions import ValidationError
+from django.core.validators import MinValueValidator
 from django.db import models
+from django.utils.safestring import mark_safe
 
 from tracet.fields import EncryptedTextField, JXPathField
 from tracet.models import AbstractTelescope, Observation
 
 
+logger = logging.getLogger(__name__)
+
+
 class ATCA(AbstractTelescope):
+    FREQUENCY_CONFIGURATIONS = {
+        "band_16cm": {
+            "name": "Band 16 cm",
+            "center_freq": 2150,
+            "offset_setting": [-1, -1, -1, 0],
+        },
+        "band_4cm": {
+            "name": "Band 4 cm",
+            "center_freq": 8128,
+            "offset_setting": [160, 160, 480, 480],
+        },
+        "band_15mm": {
+            "name": "Band 15 mm",
+            "center_freq": 19840,
+            "offset_setting": [160, 160, 480, 480],
+        },
+        "band_7mm_low": {
+            "name": "Band 7 mm",
+            "center_freq": 35726,
+            "offset_setting": [160, 160, 480, 480],
+        },
+        "band_7mm_high": {
+            "name": "Band 7 mm",
+            "center_freq": 44428,
+            "offset_setting": [160, 160, 480, 480],
+        },
+    }
+
+    FrequencyConfiguration = models.TextChoices(
+        "FrequencyConfiguration",
+        [
+            (
+                key.upper(),
+                (
+                    key,
+                    f"{conf['name']} ({conf['center_freq']} MHz, offsets={','.join(map(str, conf['offset_setting']))})",
+                ),
+            )
+            for key, conf in FREQUENCY_CONFIGURATIONS.items()
+        ],
+    )
+
     OBSERVATORY = "ATCA"
     CONFIGURATION = ""
     SUMMARY_TEMPLATE = "atca/summary.html"
 
-    projectid = models.CharField(max_length=500)
-    http_username = models.CharField(max_length=500, verbose_name="HTTP Username")
-    http_password = models.CharField(max_length=500, verbose_name="HTTP Password")
-    email = models.EmailField(
-        help_text="The email address that was supplied in the NAPA proposal."
-    )
+    project_code = models.CharField(max_length=500)
     authentication_token = EncryptedTextField(null=True)
     ra_path = JXPathField(
         help_text="The (x|j)path to the Right Ascension. This value is set by the most recent matching notice.",
@@ -28,84 +74,115 @@ class ATCA(AbstractTelescope):
     dec_path = JXPathField(
         help_text="The (x|j)path to the Declination. This value is set by the most recent matching notice.",
     )
+    frequency_configuration = models.CharField(
+        help_text=mark_safe(
+            "The observation frequency configuration. "
+            "Five preset configurations are provided, with their central frequency and offsets indicated. "
+            "More information is available <a href='https://www.narrabri.atnf.csiro.au/observing/bigcat/bigcat_rf.html'>here</a>"
+        ),
+        choices=FrequencyConfiguration,
+    )
     maximum_lag = models.FloatField(
-        help_text="The maximum delay allowed for scheduling this observation. If the observation cannot be scheduled to start within this time, it will not be scheduled at all. [minute]"
+        help_text="The maximum delay allowed for scheduling this observation. If the observation cannot be scheduled to start within this time, it will not be scheduled at all. [minute]",
+        validators=[MinValueValidator(0)],
     )
-    minimum_exposure = models.IntegerField(
-        help_text="The minimum exposure time required for this trigger. The trigger will be rejected if ATCA cannot schedule a total exposure of at least this time. [minute]"
+    minimum_integration = models.FloatField(
+        help_text="The minimum exposure time required for this trigger. The trigger will be rejected if ATCA cannot schedule a total exposure of at least this time. [minute]",
+        validators=[MinValueValidator(0)],
     )
-    maximum_exposure = models.IntegerField(
-        help_text="The maximum exposure time required for this trigger. [minute]"
+    maximum_integration = models.FloatField(
+        help_text="The maximum exposure time required for this trigger. [minute]",
+        validators=[MinValueValidator(0)],
+    )
+    minimum_elevation = models.FloatField(
+        help_text="Ensure scheduled observations have a local elevation angle no smaller than this value. [degree]"
+    )
+    calibration_integration = models.FloatField(
+        help_text="The integration time for each calibrator visit (does not apply to flux density calibrators). [minute]",
+        validators=[MinValueValidator(0)],
+    )
+    calibration_gap = models.FloatField(
+        help_text="The maximum time spent on-source between calibrator visits. [minute]",
+        validators=[MinValueValidator(0)],
     )
 
     def __str__(self):
         return "ATCA Configuration"
+
+    def clean(self):
+        super().clean()
+
+        # Lodge a dummy test request and report any errors back
+        self.api_params = self.make_params(
+            "Test", SkyCoord(0, 0, unit=("deg", "deg")), True
+        )
+
+        try:
+            self.make_request(None)  # TODO Remove Observation from make_request
+        except AbstractTelescope.RejectionException as e:
+            raise ValidationError("The ATCA API returned an error: " + str(e), "atca")
+        except Exception:
+            # If the request fails for other reasons (e.g. the API is down)
+            # silently ignore the failure.
+            logger.warning(
+                "The ATCA API could not be reached to perform telescope configuration validation"
+            )
 
     def get_pointings(self, event, createdbefore=None):
         try:
             ra = event.querylatest(self.ra_path, createdbefore)
             dec = event.querylatest(self.dec_path, createdbefore)
             return [SkyCoord(float(ra), float(dec), unit=("deg", "deg"))]
-        except (TypeError, ValueError):
+        except TypeError, ValueError:
             return []
 
+    def make_params(self, name: str, radec: SkyCoord, istest: bool) -> dict:
+        return {
+            "projectCode": self.project_code,
+            "authToken": self.authentication_token,
+            "requestType": "request_observations",
+            "test": istest,
+            "validTo": (Time.now() + datetime.timedelta(self.maximum_lag)).mjd,
+            "targetList": [
+                {
+                    "name": name,
+                    "ra": radec.ra.to_string(unit=hourangle, sep=":"),
+                    "dec": radec.dec.to_string(sep=":"),
+                    "correlator_setting": "Continuum",
+                    "frequency_configuration": {
+                        "centreFreq": self.FREQUENCY_CONFIGURATIONS[
+                            self.frequency_configuration
+                        ]["center_freq"],
+                        "offset_setting": self.FREQUENCY_CONFIGURATIONS[
+                            self.frequency_configuration
+                        ]["offset_setting"],
+                        "band_setting": "midlow",  # TODO: Temp fix just to get the API working
+                    },
+                    "integration_time_min": self.maximum_integration,
+                    "minimum_integration_time_min": self.minimum_integration,
+                    "min_elevation_deg": self.minimum_elevation,
+                    "calibrator_integration_min": self.calibration_integration,
+                    "max_calibrator_integration_gap_min": self.calibration_gap,
+                }
+            ],
+        }
+
     def prepare_request(self, observation: Observation):
-        def minutes_to_hms(minutes: float) -> str:
-            h = int(minutes // 60)
-            minutes -= h * 60
-
-            m = int(minutes)
-            minutes -= m
-
-            s = int(minutes * 60)
-
-            return f"{h:02d}:{m:02d}:{s:02d}"
-
         if len(observation.pointings) != 1:
             self.log("An error occurred attempting to parse RA,Dec values:")
             raise AbstractTelescope.PreparationException()
 
         istest = not self.trigger.active
 
-        params = dict(
-            email=self.email,
-            authenticationToken=self.authentication_token,
-            maximumLag=self.maximum_lag / 60,  # [minute] -> [hour]
+        self.api_params = self.make_params(
+            str(observation.decision.event),
+            observation.pointings[0],
+            istest,
         )
-
-        if istest:
-            params |= dict(
-                test=istest,
-                emailOnly=self.email,  # Send all emails only to this email address (test mode only)
-                noTimeLimit=True,  # Assume that we can request an over-ride observation of any length (test mode only)
-                noScoreLimit=True,  # Assume that we can over-ride any observation (test mode only)
-            )
-
-        request = dict(
-            source="gamma ray burst",  # IS THIS ARBITRARY??
-            project=self.projectid,
-            minExposureLength=minutes_to_hms(self.minimum_exposure),
-            maxExposureLength=minutes_to_hms(self.maximum_exposure),
-            rightAscension=observation.pointings[0].ra.to_string(
-                unit=hourangle, sep=":"
-            ),
-            declination=observation.pointings[0].dec.to_string(sep=":"),
-            scanType="Dwell",
+        self.log(
+            "API params",
+            json.dumps(self.api_params | {"authToken": "HIDDEN"}, indent=4),
         )
-
-        for atcaband in self.atcabands.order_by("band"):
-            request[atcaband.get_band_display()] = dict(
-                use=True,
-                exposureLength=atcaband.exposure,
-                freq1=atcaband.freq1,
-                freq2=atcaband.freq2,
-            )
-
-        # Request is passed as a JSON string
-        params["request"] = json.dumps(request)
-
-        self.api_params = params
-        self.log("API params", json.dumps(self.api_params | {"authenticationToken": "HIDDEN"}, indent=4))
 
     def check_override(self, current_observation, proposed_observation):
         # ATCA observations cannot at present be cancelled and/or repointed
@@ -118,46 +195,30 @@ class ATCA(AbstractTelescope):
     def make_request(self, observation: Observation):
         try:
             response = requests.post(
-                "https://www.narrabri.atnf.csiro.au/cgi-bin/obstools/rapid_response/rapid_response_service.py",
-                self.api_params,
+                "https://www.narrabri.atnf.csiro.au/cgi-bin/obstools/rapid_response/rapidresponse_web_service.py",
+                json=self.api_params,
             )
             response.raise_for_status()
+
+            response = json.loads(response.text)
+            self.log("Pretty API Response", json.dumps(response, indent=4))
         except requests.RequestException as e:
-            status_code = e.response.status_code if e.response is not None else "unknown"
-            self.log(f"An error occurred making the HTTP request to the ATCA API (status code: {status_code})")
-            raise AbstractTelescope.RequestException() from e
-
-        self.log("Raw API response", response.text)
-
-        # TODO: parse the response and detect success or failure
-        raise AbstractTelescope.RejectionException()
-
-
-class ATCABand(models.Model):
-    class Bands(models.IntegerChoices):
-        L3mm = 3, "3mm"
-        L7mm = 7, "6mm"
-        L15mm = 15, "15mm"
-        L4cm = 40, "4cm"
-        L16cm = 160, "16cm"
-
-    class Meta:
-        constraints = [
-            models.UniqueConstraint(
-                fields=["atca", "band"], name="unique wavelength configuration"
+            status_code = (
+                e.response.status_code if e.response is not None else "unknown"
             )
-        ]
+            self.log(
+                f"An error occurred making the HTTP request to the ATCA API (status code: {status_code})"
+            )
+            raise AbstractTelescope.RequestException() from e
+        except json.JSONDecodeError as e:
+            self.log("Raw API response", response.text)
+            self.log("The ATCA API returned invalid JSON", e)
+            raise AbstractTelescope.RequestException()
 
-    atca = models.ForeignKey(ATCA, related_name="atcabands", on_delete=models.CASCADE)
-    band = models.IntegerField(choices=Bands)
-    exposure = models.IntegerField(
-        help_text="The exposure time of this reciever. Receivers will be continuously cycled up until the full scheduled slot is exhausted. [minute]"
-    )
-    freq1 = models.IntegerField(
-        verbose_name="Frequency 1",
-        help_text="Specify the central frequency for the first of the 2 GHz bands at which this receiver will observe. Note: the 16 cm reciever can only observe at 2100 MHz. [MHz]",
-    )
-    freq2 = models.IntegerField(
-        verbose_name="Frequency 2",
-        help_text="Specify the central frequency for the second of the 2 GHz bands at which this receiver will observe. Note: the 16 cm reciever can only observe at 2100 MHz. [MHz]",
-    )
+        if isinstance(response, dict) and response.get("accepted", False):
+            # TODO: Save the request ID
+            pass
+        else:
+            raise AbstractTelescope.RejectionException(
+                response.get("error", "No reason given")
+            )

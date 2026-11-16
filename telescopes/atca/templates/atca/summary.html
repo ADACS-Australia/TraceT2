@@ -1,14 +1,13 @@
 <table class="left-align">
     <tbody>
         <tr><th>Observatory</th><td>{{ telescope.OBSERVATORY }}</td></tr>
-        <tr><th>Project ID</th><td>{{ telescope.projectid }}</td></tr>
         <tr><th>RA</th><td><code>{{ telescope.ra_path }}</code></td></tr>
         <tr><th>Dec</th><td><code>{{ telescope.dec_path }}</code></td></tr>
+        <tr><th>Project Code</th><td>{{ telescope.project_code }}</td></tr>
+        <tr><th>Frequency Configuration</th><td>{{ telescope.get_frequency_configuration_display }}</td></tr>
         <tr><th>Maximum lag</th><td>{{ telescope.maximum_lag }} minutes</td></tr>
-        <tr><th>Exposure (min/max)</th><td>{{ telescope.minimum_exposure }}&ndash;{{ telescope.maximum_exposure }} minutes</td></tr>
-
-        {% for band in telescope.atcabands.all %}
-            <tr><th>Band {{ band.get_band_display }}</th><td>{{ band.exposure }} minutes at {{ band.freq1 }} MHz and {{ band.freq2 }} MHz</td></tr>
-        {% endfor %}
+        <tr><th>Integration (min/max)</th><td>{{ telescope.minimum_integration }}&ndash;{{ telescope.maximum_integration }} minutes</td></tr>
+        <tr><th>Minimum elevation</th><td>{{ telescope.minimum_elevation }}°</td></tr>
+        <tr><th>Calibration</th><td>Vist each calibrator at least every {{ telescope.calibration_gap }} minutes for {{ telescope.calibration_integration }} minutes each.</td></tr>
     </tbody>
 </table>

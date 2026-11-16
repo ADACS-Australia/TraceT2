@@ -554,21 +554,8 @@ form#trigger {
         }
     }
 
-    tr.atcaband {
-        input, select {
-            margin-bottom: 0;
-        }
-
-        a.delete-formset {
-            position: relative;
-            display: inline-block;
-            top: unset;
-            right: unset;
-        }
-
-            &::after {
-                display: inline-block;
-            }
+    #telescopes fieldset.telescope {
+        width: 100%;
     }
 }
 
