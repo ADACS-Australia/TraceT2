@@ -1,0 +1,16 @@
+.git
+.github
+.venv
+__pycache__
+*.py[oc]
+*.sqlite3
+*.sqlite3-shm
+*.sqlite3-wal
+logs/
+deploy/caddy/data
+deploy/secrets.env
+deploy/systemd
+.dockerignore
+.gitignore
+README.md
+COPYING.md

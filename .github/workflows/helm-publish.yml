@@ -1,0 +1,54 @@
+name: Publish Helm Chart
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - "deploy/helm/tracet2/**"
+  workflow_dispatch:
+
+env:
+  REGISTRY: ghcr.io
+  CHART_PATH: deploy/helm/tracet2
+  OCI_REPO: oci://ghcr.io/${{ github.repository_owner }}/charts
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install Helm
+        uses: azure/setup-helm@v4
+
+      - name: Log in to GHCR
+        run: echo "${{ secrets.GITHUB_TOKEN }}" | helm registry login ${{ env.REGISTRY }} --username ${{ github.actor }} --password-stdin
+
+      - name: Extract chart version
+        id: chart
+        run: |
+          VERSION=$(grep '^version:' ${{ env.CHART_PATH }}/Chart.yaml | awk '{print $2}')
+          echo "version=${VERSION}" >> "$GITHUB_OUTPUT"
+          echo "Chart version: ${VERSION}"
+
+      - name: Package chart
+        run: helm package ${{ env.CHART_PATH }} --destination /tmp/charts
+
+      - name: Push chart to GHCR
+        run: helm push /tmp/charts/tracet2-${{ steps.chart.outputs.version }}.tgz ${{ env.OCI_REPO }}
+
+      - name: Summary
+        run: |
+          echo "### Helm Chart Published :rocket:" >> "$GITHUB_STEP_SUMMARY"
+          echo "" >> "$GITHUB_STEP_SUMMARY"
+          echo "- **Chart:** tracet2" >> "$GITHUB_STEP_SUMMARY"
+          echo "- **Version:** ${{ steps.chart.outputs.version }}" >> "$GITHUB_STEP_SUMMARY"
+          echo "- **OCI Reference:** \`${{ env.OCI_REPO }}/tracet2:${{ steps.chart.outputs.version }}\`" >> "$GITHUB_STEP_SUMMARY"
+          echo "" >> "$GITHUB_STEP_SUMMARY"
+          echo "**Install:**" >> "$GITHUB_STEP_SUMMARY"
+          echo "\`\`\`bash" >> "$GITHUB_STEP_SUMMARY"
+          echo "helm install tracet2 ${{ env.OCI_REPO }}/tracet2 --version ${{ steps.chart.outputs.version }}" >> "$GITHUB_STEP_SUMMARY"
+          echo "\`\`\`" >> "$GITHUB_STEP_SUMMARY"

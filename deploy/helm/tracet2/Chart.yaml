@@ -1,0 +1,6 @@
+apiVersion: v2
+name: tracet2
+description: Helm chart for TraceT2 - a Django application for transient event triggering
+type: application
+version: 0.1.0
+appVersion: "0.1.0"
